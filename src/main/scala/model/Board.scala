@@ -74,3 +74,12 @@ trait Board:
    * @return an Option containing the captured Square, if one exists.
    */
   def getCapturablePieceBetween(move: Move): Option[Square]
+
+
+  /**
+   * Companion object for Board.
+   */
+  object Board {
+    val Size: Int = 8
+    val PieceRowNumber: Int = 3
+  }
