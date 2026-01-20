@@ -11,5 +11,13 @@ lazy val root = (project in file("."))
     assembly / assemblyMergeStrategy := {
       case PathList("META-INF", _*) => MergeStrategy.discard
       case _                        => MergeStrategy.first
-    }
+    },
+
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.2.19" % Test,
+      "junit" % "junit" % "4.13.2" % Test
+    ),
+
+    // Alias opzionale per lanciare tutto con un comando solo
+    addCommandAlias("check", ";compile;test")
   )
