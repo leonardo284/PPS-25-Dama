@@ -1,8 +1,6 @@
 package model
 
-import model.enums.{ColorType, PieceType}
-import model.enums.ColorType.{DARK, LIGHT}
-
+import enums.ColorType
 
 /**
  * Interface representing the checkerboard.
@@ -91,13 +89,62 @@ trait Board:
  */
 class CheckersBoard extends Board:
 
-    /**
-     * Retrieves the piece at a specific position.
-     *
-     * @param pos the board position to check.
-     * @return an Option containing the Piece if present, None otherwise.
-     */
-    override def getPiece(pos: Position): Option[Piece] = ???
+  /**
+   * Checks if a given position is within the board's dimensions.
+   *
+   * @param pos the position to validate.
+   * @return true if the position is inside the grid, false otherwise.
+   */
+  private def isInsideBoard(pos: Position): Boolean = pos.row >= 0 && pos.row < squares.length &&
+    pos.col >= 0 && pos.col < squares(pos.row).length
+
+  /**
+   * Determines the color of a square based on its row and column coordinates.
+   *
+   * @param pos the position of the square.
+   * @return LIGHT color if the sum of row and column is even, DARK otherwise.
+   */
+  private def squareColor(pos: Position): ColorType =
+    if ((pos.row + pos.col) % 2 == 0) ColorType.LIGHT else ColorType.DARK
+
+  /**
+   * Determines the initial piece setup for a specific square during board initialization.
+   * Pieces are placed only on DARK squares in the first and last rows specified by Board configuration.
+   *
+   * @param position the position to initialize.
+   * @return an Option containing a Man piece of the appropriate color, or None if the square should be empty.
+   */
+  private def initSquare(position: Position) = (position.row, position.col) match {
+    case (r, _) if r < Board.PieceRowNumber && squareColor(position) == ColorType.DARK => Some(Man(ColorType.DARK))
+    case (r, _) if r >= Board.Size - Board.PieceRowNumber && squareColor(position) == ColorType.DARK => Some(Man(ColorType.LIGHT))
+    case _ => None
+  }
+
+  /**
+   * The internal representation of the board as a 2D grid.
+   * It is initialized as a Vector of Vectors (Board.SizexBoard.Size) where each square is 
+   * instantiated with its specific color, position, and initial piece setup.
+   */
+  private var squares: Vector[Vector[Square]] =
+    Vector.tabulate(Board.Size, Board.Size) { (row, col) =>
+
+      val piece: Option[Piece] = initSquare(Position(row, col))
+
+      BoardSquare(
+        colorType = squareColor(Position(row, col)),
+        position = Position(row, col),
+        piece = piece
+      )
+    }
+
+
+  /**
+   * Retrieves the piece at a specific position.
+   *
+   * @param pos the board position to check.
+   * @return an Option containing the Piece if present, None otherwise.
+   */
+  override def getPiece(pos: Position): Option[Piece] = squares(pos.row)(pos.col).piece
 
     /**
      * Retrieves the square object at a specific position.
@@ -105,7 +152,9 @@ class CheckersBoard extends Board:
      * @param pos the board position to check.
      * @return an Option containing the Square if within bounds, None otherwise.
      */
-    override def getSquare(pos: Position): Option[Square] = ???
+    override def getSquare(pos: Position): Option[Square] =
+      if (isInsideBoard(pos)) Some(squares(pos.row)(pos.col))
+      else None
 
     /**
      * Returns the square at a given position.
