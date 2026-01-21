@@ -77,9 +77,112 @@ trait Board:
 
 
   /**
-   * Companion object for Board.
+   * Overloaded version to find a capturable piece between two squares for a specific piece.
+   *
+   * @param from        the starting square.
+   * @param to          the destination square.
+   * @param movingPiece the piece performing the move.
+   * @return an Option containing the square with the piece to be captured.
    */
-  object Board {
-    val Size: Int = 8
-    val PieceRowNumber: Int = 3
-  }
+  def getCapturablePieceBetween(from: Square, to: Square, movingPiece: Piece): Option[Square]
+
+/**
+ * Represents the checkers board.
+ */
+class CheckersBoard extends Board:
+
+    /**
+     * Retrieves the piece at a specific position.
+     *
+     * @param pos the board position to check.
+     * @return an Option containing the Piece if present, None otherwise.
+     */
+    override def getPiece(pos: Position): Option[Piece] = ???
+
+    /**
+     * Retrieves the square object at a specific position.
+     *
+     * @param pos the board position to check.
+     * @return an Option containing the Square if within bounds, None otherwise.
+     */
+    override def getSquare(pos: Position): Option[Square] = ???
+
+    /**
+     * Returns the square at a given position.
+     *
+     * @param pos the board's position.
+     * @return an optional square if the position is inside the board.
+     */
+    override def squareAt(pos: Position): Option[Square] = ???
+
+    /**
+     * Calculates all legal moves (both normal moves and captures) for a given square.
+     *
+     * @param from the starting square.
+     * @return a list of possible destination squares.
+     */
+    override def possibleMoves(from: Square): List[Square] = ???
+
+    /**
+     * Executes a piece movement on the board.
+     *
+     * @param move the move object containing source, destination, and potential captured pieces.
+     * @return true if the move was valid and successfully applied, false otherwise.
+     */
+    override def movePiece(move: Move): Boolean = ???
+
+    /**
+     * Returns an iterator over all squares on the board.
+     *
+     * @return an iterator of Square objects.
+     */
+    override def iterator: Iterator[Square] = ???
+
+    /**
+     * Returns a flat sequence of all squares.
+     *
+     * @return a Seq containing all Square objects.
+     */
+    override def allSquares: Seq[Square] = ???
+
+    /**
+     * Returns an iterator that provides pairs of positions and their corresponding squares.
+     *
+     * @return an iterator of (Position, Square) tuples.
+     */
+    override def iteratorWithPositions: Iterator[(Position, Square)] = ???
+
+    /**
+     * Provides a 2D matrix view of the board's squares.
+     *
+     * @return a Vector of Vectors representing the board grid.
+     */
+    override def squaresView: Vector[Vector[Square]] = ???
+
+    /**
+     * Identifies the square containing a captured piece between the start and end of a move.
+     *
+     * @param move the move performed.
+     * @return an Option containing the captured Square, if one exists.
+     */
+    override def getCapturablePieceBetween(move: Move): Option[Square] = ???
+
+    /**
+     * Overloaded version to find a capturable piece between two squares for a specific piece.
+     *
+     * @param from        the starting square.
+     * @param to          the destination square.
+     * @param movingPiece the piece performing the move.
+     * @return an Option containing the square with the piece to be captured.
+     */
+    override def getCapturablePieceBetween(from: Square, to: Square, movingPiece: Piece): Option[Square] = ???
+
+
+
+/**
+ * Companion object for Board.
+ */
+object Board {
+  val Size: Int = 8
+  val PieceRowNumber: Int = 3
+}
