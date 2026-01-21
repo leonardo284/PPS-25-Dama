@@ -213,7 +213,7 @@ class CheckersBoard extends Board:
      *
      * @return a Vector of Vectors representing the board grid.
      */
-    override def squaresView: Vector[Vector[Square]] = ???
+    override def squaresView: Vector[Vector[Square]] = squares
 
     /**
      * Identifies the square containing a captured piece between the start and end of a move.
@@ -221,7 +221,11 @@ class CheckersBoard extends Board:
      * @param move the move performed.
      * @return an Option containing the captured Square, if one exists.
      */
-    override def getCapturablePieceBetween(move: Move): Option[Square] = ???
+    override def getCapturablePieceBetween(move: Move): Option[Square] =
+      for
+        piece <- move.from.piece
+        square <- getCapturablePieceBetween(move.from, move.to, piece)
+      yield square
 
     /**
      * Overloaded version to find a capturable piece between two squares for a specific piece.
@@ -231,7 +235,16 @@ class CheckersBoard extends Board:
      * @param movingPiece the piece performing the move.
      * @return an Option containing the square with the piece to be captured.
      */
-    override def getCapturablePieceBetween(from: Square, to: Square, movingPiece: Piece): Option[Square] = ???
+    override def getCapturablePieceBetween(from: Square, to: Square, movingPiece: Piece): Option[Square] =
+      val midRow = (from.position.row + to.position.row) / 2
+      val midCol = (from.position.col + to.position.col) / 2
+      val midPos = Position(midRow, midCol)
+      val midSquare = squareAt(midPos)
+
+      if (midSquare.isDefined && midSquare.get.piece.exists(_.color != movingPiece.color) && to.isEmpty)
+        midSquare
+      else 
+        None
 
 
 
