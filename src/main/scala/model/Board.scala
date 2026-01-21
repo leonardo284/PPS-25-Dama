@@ -188,21 +188,25 @@ class CheckersBoard extends Board:
      *
      * @return an iterator of Square objects.
      */
-    override def iterator: Iterator[Square] = ???
+    override def iterator: Iterator[Square] = squares.iterator.flatMap(_.iterator)
 
     /**
      * Returns a flat sequence of all squares.
      *
      * @return a Seq containing all Square objects.
      */
-    override def allSquares: Seq[Square] = ???
+    override def allSquares: Seq[Square] = squares.flatten
 
     /**
      * Returns an iterator that provides pairs of positions and their corresponding squares.
      *
      * @return an iterator of (Position, Square) tuples.
      */
-    override def iteratorWithPositions: Iterator[(Position, Square)] = ???
+    override def iteratorWithPositions: Iterator[(Position, Square)] =
+      for {
+        row <- squares.indices.iterator
+        col <- squares(row).indices.iterator
+      } yield (Position(row, col), squares(row)(col))
 
     /**
      * Provides a 2D matrix view of the board's squares.
