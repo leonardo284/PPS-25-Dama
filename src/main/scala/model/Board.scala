@@ -162,7 +162,10 @@ class CheckersBoard extends Board:
      * @param pos the board's position.
      * @return an optional square if the position is inside the board.
      */
-    override def squareAt(pos: Position): Option[Square] = ???
+    override def squareAt(pos: Position): Option[Square] =
+      if isInsideBoard(pos)
+      then Some(squares(pos.row)(pos.col))
+      else None
 
     /**
      * Calculates all legal moves (both normal moves and captures) for a given square.
