@@ -1,6 +1,8 @@
 package model
 
-import enums.ColorType
+import enums.{ColorType, PieceType}
+import enums.ColorType.{DARK, LIGHT}
+
 
 /**
  * Interface representing the checkerboard.
@@ -121,6 +123,111 @@ class CheckersBoard extends Board:
   }
 
   /**
+   * Checks if there is a piece that can be captured (jumped) between the starting and destination positions
+   */
+  private def hasCapturablePieceBetween(move: Move): Boolean =
+    getCapturablePieceBetween(move).isDefined
+
+  /**
+   * Checks if there is a capturable regular piece (Man) between the starting and destination positions
+   */
+  private def hasCapturableManPieceBetween(move: Move): Boolean =
+    getCapturablePieceBetween(move).exists(_.containsMan)
+  
+  /**
+   * Checks if the starting square is within the board boundaries and is a dark square
+   */
+  private def isValidMoveStartingPosition(square: Square): Boolean = 
+    isInsideBoard(square.position) && square.colorType == ColorType.DARK
+
+  /**
+   * Verifies if the destination square is valid for the specific piece making the move.
+   * Validates basic board constraints (boundaries, color, occupancy) and then checks 
+   * move-specific logic for both Men (regular pieces) and Kings, including normal 
+   * steps and capture jumps.
+   *
+   * @param move the move to be validated
+   * @return true if the destination follows the movement rules for the piece type
+   */
+  private def isValidMoveDestinationPosition(move: Move): Boolean =
+    val from = move.from
+    val to = move.to
+
+    if (!isInsideBoard(to.position)) return false
+    if (to.colorType != DARK) return false
+    if (to.piece.isDefined) return false
+
+    val piece = from.piece.getOrElse(return false)
+
+    val rowDiff = to.position.row - from.position.row
+    val colDiff = to.position.col - from.position.col
+
+    piece match {
+
+      // ---------------- MAN ----------------
+      case Man(color) =>
+        val rowDir = if (color == ColorType.DARK) 1 else -1
+
+        val normalMove =
+          rowDiff == rowDir &&
+            math.abs(colDiff) == 1 /*&&
+                isValidDestinationPiece(move)*/
+        
+        val captureMove =
+          rowDiff == 2 * rowDir &&
+            math.abs(colDiff) == 2 &&
+            hasCapturableManPieceBetween(move) // If a Man is being moved, it can only capture other Man
+        normalMove || captureMove
+
+      // ---------------- KING ----------------
+      case King(_) =>
+        val absRow = math.abs(rowDiff)
+        val absCol = math.abs(colDiff)
+
+        val normalMove =
+          absRow == 1 &&
+            absCol == 1 /*&&
+                isValidDestinationPiece(move)*/
+
+        val captureMove =
+          absRow == 2 &&
+            absCol == 2 &&
+            hasCapturablePieceBetween(move)
+
+        normalMove || captureMove
+    }
+
+  /**
+   * Verifies that a regular piece (Man) cannot capture a King 
+   */
+  private def isCaptureAllowed(move: Move): Boolean = (move.from.piece, move.to.piece) match
+    case (Some(pieceFrom), Some(pieceTo)) => pieceFrom.pieceType == PieceType.King && pieceTo.pieceType == PieceType.Man ||
+      pieceFrom.pieceType == pieceTo.pieceType
+    case _ => true
+
+  /**
+   * Validates whether a move is legal according to the game rules.
+   *
+   * @param move the move to be validated
+   * @return true if the move follows all game rules, false otherwise
+   */
+  private def isValidMove(move: Move): Boolean =
+
+    // Ensure there is actually a piece at the starting position
+    if (move.from.piece.isEmpty) return false
+
+    // The destination square must be a valid board square
+    if (!isValidMoveStartingPosition(move.to)) return false
+    
+    // Verify if the specific destination is legal for this type of move
+    if (!isValidMoveDestinationPosition(move)) return false
+    
+    // Check if a capture (jump) is required or allowed by the rules
+    if (!isCaptureAllowed(move)) return false
+
+    true
+
+  /**
    * The internal representation of the board as a 2D grid.
    * It is initialized as a Vector of Vectors (Board.SizexBoard.Size) where each square is 
    * instantiated with its specific color, position, and initial piece setup.
@@ -146,26 +253,26 @@ class CheckersBoard extends Board:
    */
   override def getPiece(pos: Position): Option[Piece] = squares(pos.row)(pos.col).piece
 
-    /**
-     * Retrieves the square object at a specific position.
-     *
-     * @param pos the board position to check.
-     * @return an Option containing the Square if within bounds, None otherwise.
-     */
-    override def getSquare(pos: Position): Option[Square] =
-      if (isInsideBoard(pos)) Some(squares(pos.row)(pos.col))
-      else None
+  /**
+   * Retrieves the square object at a specific position.
+   *
+   * @param pos the board position to check.
+   * @return an Option containing the Square if within bounds, None otherwise.
+   */
+  override def getSquare(pos: Position): Option[Square] =
+    if (isInsideBoard(pos)) Some(squares(pos.row)(pos.col))
+    else None
 
-    /**
-     * Returns the square at a given position.
-     *
-     * @param pos the board's position.
-     * @return an optional square if the position is inside the board.
-     */
-    override def squareAt(pos: Position): Option[Square] =
-      if isInsideBoard(pos)
-      then Some(squares(pos.row)(pos.col))
-      else None
+  /**
+   * Returns the square at a given position.
+   *
+   * @param pos the board's position.
+   * @return an optional square if the position is inside the board.
+   */
+  override def squareAt(pos: Position): Option[Square] =
+    if isInsideBoard(pos)
+    then Some(squares(pos.row)(pos.col))
+    else None
 
     /**
      * Calculates all legal moves (both normal moves and captures) for a given square.
@@ -173,78 +280,112 @@ class CheckersBoard extends Board:
      * @param from the starting square.
      * @return a list of possible destination squares.
      */
-    override def possibleMoves(from: Square): List[Square] = ???
+  override def possibleMoves(from: Square): List[Square] = ???
 
-    /**
-     * Executes a piece movement on the board.
-     *
-     * @param move the move object containing source, destination, and potential captured pieces.
-     * @return true if the move was valid and successfully applied, false otherwise.
-     */
-    override def movePiece(move: Move): Boolean = ???
+  /**
+   * Executes a piece movement on the board.
+   *
+   * @param move the move object containing source, destination, and potential captured pieces.
+   * @return true if the move was valid and successfully applied, false otherwise.
+   */
+  override def movePiece(move: Move): Boolean =
+    if (!isValidMove(move)) return false
+  
+    val from = move.from
+    val to = move.to
+    val piece = from.piece.get
+    val captured = move.captured
+  
+    // Update the starting square (remove the piece)
+    val rowAfterFrom = squares(from.position.row)
+      .updated(from.position.col, BoardSquare(from.colorType, from.position, None))
+    squares = squares.updated(from.position.row, rowAfterFrom)
+  
+    // Empty the captured square (if any)
+    captured.foreach { capturedSquare =>
+      val rowAfterCapture = squares(capturedSquare.position.row)
+        .updated(capturedSquare.position.col, BoardSquare(capturedSquare.colorType, capturedSquare.position, None))
+      squares = squares.updated(capturedSquare.position.row, rowAfterCapture)
+    }
+  
+    // Check for King promotion
+    val promotedPiece = piece match {
+      case Man(LIGHT) if to.position.row == 0 =>
+        King(LIGHT)
+      case Man(DARK) if to.position.row == Board.Size - 1 =>
+        King(DARK)
+      case _ => piece
+    }
+  
+    // Update the destination square (place the piece or the King)
+    val rowAfterTo = squares(to.position.row)
+      .updated(to.position.col, BoardSquare(to.colorType, to.position, Some(promotedPiece)))
+    squares = squares.updated(to.position.row, rowAfterTo)
+  
+    true
+      
+  /**
+   * Returns an iterator over all squares on the board.
+   *
+   * @return an iterator of Square objects.
+   */
+  override def iterator: Iterator[Square] = squares.iterator.flatMap(_.iterator)
 
-    /**
-     * Returns an iterator over all squares on the board.
-     *
-     * @return an iterator of Square objects.
-     */
-    override def iterator: Iterator[Square] = squares.iterator.flatMap(_.iterator)
+  /**
+   * Returns a flat sequence of all squares.
+   *
+   * @return a Seq containing all Square objects.
+   */
+  override def allSquares: Seq[Square] = squares.flatten
 
-    /**
-     * Returns a flat sequence of all squares.
-     *
-     * @return a Seq containing all Square objects.
-     */
-    override def allSquares: Seq[Square] = squares.flatten
+  /**
+   * Returns an iterator that provides pairs of positions and their corresponding squares.
+   *
+   * @return an iterator of (Position, Square) tuples.
+   */
+  override def iteratorWithPositions: Iterator[(Position, Square)] =
+    for {
+      row <- squares.indices.iterator
+      col <- squares(row).indices.iterator
+    } yield (Position(row, col), squares(row)(col))
 
-    /**
-     * Returns an iterator that provides pairs of positions and their corresponding squares.
-     *
-     * @return an iterator of (Position, Square) tuples.
-     */
-    override def iteratorWithPositions: Iterator[(Position, Square)] =
-      for {
-        row <- squares.indices.iterator
-        col <- squares(row).indices.iterator
-      } yield (Position(row, col), squares(row)(col))
+  /**
+   * Provides a 2D matrix view of the board's squares.
+   *
+   * @return a Vector of Vectors representing the board grid.
+   */
+  override def squaresView: Vector[Vector[Square]] = squares
 
-    /**
-     * Provides a 2D matrix view of the board's squares.
-     *
-     * @return a Vector of Vectors representing the board grid.
-     */
-    override def squaresView: Vector[Vector[Square]] = squares
+  /**
+   * Identifies the square containing a captured piece between the start and end of a move.
+   *
+   * @param move the move performed.
+   * @return an Option containing the captured Square, if one exists.
+   */
+  override def getCapturablePieceBetween(move: Move): Option[Square] =
+    for
+      piece <- move.from.piece
+      square <- getCapturablePieceBetween(move.from, move.to, piece)
+    yield square
 
-    /**
-     * Identifies the square containing a captured piece between the start and end of a move.
-     *
-     * @param move the move performed.
-     * @return an Option containing the captured Square, if one exists.
-     */
-    override def getCapturablePieceBetween(move: Move): Option[Square] =
-      for
-        piece <- move.from.piece
-        square <- getCapturablePieceBetween(move.from, move.to, piece)
-      yield square
+  /**
+   * Overloaded version to find a capturable piece between two squares for a specific piece.
+   *
+   * @param from        the starting square.
+   * @param to          the destination square.
+   * @param movingPiece the piece performing the move.
+   * @return an Option containing the square with the piece to be captured.
+   */
+  override def getCapturablePieceBetween(from: Square, to: Square, movingPiece: Piece): Option[Square] =
+    val midRow = (from.position.row + to.position.row) / 2
+    val midCol = (from.position.col + to.position.col) / 2
+    val midPos = Position(midRow, midCol)
+    val midSquare = squareAt(midPos)
 
-    /**
-     * Overloaded version to find a capturable piece between two squares for a specific piece.
-     *
-     * @param from        the starting square.
-     * @param to          the destination square.
-     * @param movingPiece the piece performing the move.
-     * @return an Option containing the square with the piece to be captured.
-     */
-    override def getCapturablePieceBetween(from: Square, to: Square, movingPiece: Piece): Option[Square] =
-      val midRow = (from.position.row + to.position.row) / 2
-      val midCol = (from.position.col + to.position.col) / 2
-      val midPos = Position(midRow, midCol)
-      val midSquare = squareAt(midPos)
-
-      if (midSquare.isDefined && midSquare.get.piece.exists(_.color != movingPiece.color) && to.isEmpty)
-        midSquare
-      else 
-        None
+    if (midSquare.isDefined && midSquare.get.piece.exists(_.color != movingPiece.color) && to.isEmpty)
+      midSquare
+    else 
+      None
 
 
 
