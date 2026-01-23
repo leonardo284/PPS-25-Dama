@@ -47,3 +47,17 @@ class GameImpl(player1Name: String, player2Name: String) extends Game:
   override def getMoves: List[Move] = movesHistory
 
 
+  /**
+   * Returns the current board.
+   *
+   * @return the board
+   */
+  override def currentBoard: Board = board
+
+
+  /**
+   * Returns the player whose turn it is.
+   *
+   * @return the current player
+   */
+  override def currentTurn: Player = turn
