@@ -244,6 +244,20 @@ class CheckersBoard extends Board:
       )
     }
 
+  /**
+   * Defines the possible movement directions for a piece based on its type and color.
+   * Each tuple (rowDelta, colDelta) represents a diagonal step.
+   */
+  private def moveDirections(piece: Piece): List[(Int, Int)] = piece match {
+    case Man(ColorType.DARK) => List((1, -1), (1, 1))
+    case Man(ColorType.LIGHT) => List((-1, -1), (-1, 1))
+    case King(_) =>
+      List(
+        (1, -1), (1, 1),
+        (-1, -1), (-1, 1)
+      )
+  }
+
 
   /**
    * Retrieves the piece at a specific position.
@@ -274,13 +288,42 @@ class CheckersBoard extends Board:
     then Some(squares(pos.row)(pos.col))
     else None
 
-    /**
-     * Calculates all legal moves (both normal moves and captures) for a given square.
-     *
-     * @param from the starting square.
-     * @return a list of possible destination squares.
-     */
-  override def possibleMoves(from: Square): List[Square] = ???
+  /**
+   * Calculates all legal moves (both normal moves and captures) for a given square.
+   *
+   * @param from the starting square.
+   * @return a list of possible destination squares.
+   */
+  override def possibleMoves(from: Square): List[Square] =
+    val piece = from.piece.getOrElse(return List.empty)
+
+    // Iterate through all potential directions based on piece type (2 for Man, 4 for King).
+    // Each direction is a tuple (dr = direction row, dc = direction column).
+    // Using flatMap to concatenate the valid destination squares from all directions.
+    moveDirections(piece).flatMap { case (dr, dc) =>
+      val nextPos = Position(from.position.row + dr, from.position.col + dc)
+
+      squareAt(nextPos) match {
+        // Simple Move (empty square)
+        case Some(square) if square.piece.isEmpty => List(square)
+
+        // Potential Capture (Jump)
+        case Some(square) if square.piece.exists(_.color != piece.color) =>
+          val jumpPos = Position(
+            from.position.row + (2 * dr),
+            from.position.col + (2 * dc)
+          )
+
+          // The move is valid only if the landing square is within bounds and empty.
+          squareAt(jumpPos) match {
+            case Some(landing) if landing.piece.isEmpty => List(landing)
+            case _ => Nil
+          }
+        // Square is out of bounds or occupied by a friendly piece.
+        case _ => Nil
+      }
+    }
+
 
   /**
    * Executes a piece movement on the board.
