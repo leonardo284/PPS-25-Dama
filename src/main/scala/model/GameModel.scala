@@ -67,7 +67,7 @@ class GameImpl(player1Name: String, player2Name: String) extends Game:
    * @return the current player
    */
   override def currentTurn: Player = turn
- 
+
   /**
    * Attempts to make a move.
    *
@@ -98,6 +98,18 @@ class GameImpl(player1Name: String, player2Name: String) extends Game:
       Left("Invalid move")
     }
 
-  override def undoMove(): Boolean = ???
-  
+  /**
+   * Undoes the last move, if any.
+   *
+   * @return true if a move was undone, false otherwise
+   */
+  override def undoMove(): Boolean = movesHistory match {
+    case last :: rest =>
+      board.undoMovePiece(last)
+      movesHistory = rest
+      turn = if (turn == player1) player2 else player1
+      true
+    case Nil => false
+  }
+
 
