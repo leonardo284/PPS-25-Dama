@@ -42,6 +42,12 @@ class GameImpl(player1Name: String, player2Name: String) extends Game:
     else
       (Player(name1, ColorType.DARK), Player(name2, ColorType.LIGHT))
 
+  private def isMoveByCurrentPlayer(move: Move): Boolean = move.player == currentTurn &&
+    move.from.piece.isDefined &&
+    move.from.piece.get.color == currentTurn.color
+
+  private def changeTurn(): Unit = turn = if (turn == player1) player2 else player1
+  
   override def getPlayers: (Player, Player) = (player1, player2)
 
   override def getMoves: List[Move] = movesHistory
@@ -61,3 +67,27 @@ class GameImpl(player1Name: String, player2Name: String) extends Game:
    * @return the current player
    */
   override def currentTurn: Player = turn
+ 
+  /**
+   * Attempts to make a move.
+   *
+   * @param move the move to apply
+   * @return either an error message or the applied move
+   */
+  override def makeMove(move: Move): Either[String, Move] =
+    if (!isMoveByCurrentPlayer(move))
+      return Left("Invalid move")
+  
+    val success = board.movePiece(move)
+  
+    if (success) {
+      movesHistory = move :: movesHistory
+      changeTurn()
+      Right(move)
+    } else {
+      Left("Invalid move")
+    }
+
+  override def undoMove(): Boolean = ???
+  
+
