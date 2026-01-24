@@ -7,9 +7,9 @@ package model
 trait Move{
   def from: Square
   def to: Square
-  //def piece: Piece
   def player: Player
   def captured: Option[Square]
+  def isPromotion: Boolean
 }
 
 /**
@@ -23,7 +23,8 @@ case class MoveImpl(
   from: Square,
   to: Square,
   captured: Option[Square] = None,
-  player: Player
+  player: Player,
+  isPromotion: Boolean
 ) extends Move
 
 
