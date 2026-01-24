@@ -34,7 +34,7 @@ class GameTest extends AnyFunSuite with Matchers {
     // Setup a move for the inactive player
     val from = game.currentBoard.getSquare(Position(2, 1)).get
     val to = game.currentBoard.getSquare(Position(3, 2)).get
-    val move = MoveImpl(from, to, None, waitingPlayer)
+    val move = MoveImpl(from, to, None, waitingPlayer, false)
 
     val result = game.makeMove(move)
 
@@ -55,7 +55,7 @@ class GameTest extends AnyFunSuite with Matchers {
 
     val from = game.currentBoard.getSquare(fromPos).get
     val to = game.currentBoard.getSquare(toPos).get
-    val move = MoveImpl(from, to, None, initialTurn)
+    val move = MoveImpl(from, to, None, initialTurn, false)
 
     val result = game.makeMove(move)
 
@@ -68,16 +68,15 @@ class GameTest extends AnyFunSuite with Matchers {
   test("undoMove should restore the previous turn and clean history") {
     val game = new GameImpl("Alice", "Bob")
     val initialTurn = game.currentTurn
-
     // Execute a standard opening move
     val fromPos = if (initialTurn.color == LIGHT) Position(5, 0) else Position(2, 1)
     val toPos = if (initialTurn.color == LIGHT) Position(4, 1) else Position(3, 2)
-    val move = MoveImpl(game.currentBoard.getSquare(fromPos).get,
-      game.currentBoard.getSquare(toPos).get,
-      None, initialTurn)
+    val move = MoveImpl(game.currentBoard.getSquare(fromPos).get, game.currentBoard.getSquare(toPos).get, None, initialTurn, false)
 
     game.makeMove(move)
 
+    game.getMoves.length shouldBe 1
+    
     // Revert the last action
     val success = game.undoMove()
 
