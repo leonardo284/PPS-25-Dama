@@ -86,6 +86,15 @@ trait Board:
    */
   def getCapturablePieceBetween(from: Square, to: Square, movingPiece: Piece): Option[Square]
 
+
+  /**
+   * Reverts the state of the board based on the provided move.
+   *
+   * @param move The move to be undone.
+   * @return true if the board was successfully restored.
+   */
+  def undoMovePiece(move: Move): Boolean
+
 /**
  * Represents the checkers board.
  */
@@ -429,6 +438,39 @@ class CheckersBoard extends Board:
       midSquare
     else 
       None
+    
+  override def undoMovePiece(move: Move): Boolean =
+    val from = move.from
+    val to = move.to
+    val pieceNowAtTo = getPiece(to.position)
+
+    pieceNowAtTo match {
+      case Some(piece) =>
+        // 1. Restore the piece to its original position (from)
+        // Check if it was a Man that got promoted to King during this move
+        val pieceToRestore = if (move.isPromotion) Man(piece.color) else piece
+
+        updateSquare(from.position, Some(pieceToRestore))
+
+        // 2. Clear the destination square (to)
+        updateSquare(to.position, None)
+
+        // 3. Restore the captured piece, if any
+        move.captured.foreach { capturedSquare =>
+          // We assume the captured piece's info is stored within the Move object
+          updateSquare(capturedSquare.position, capturedSquare.piece)
+        }
+        true
+
+      case None => false // Should not happen if history is consistent
+    }
+
+  /** 
+   * Helper to update a single square in the 2D Vector
+   */
+  private def updateSquare(pos: Position, piece: Option[Piece]): Unit =
+    val row = squares(pos.row).updated(pos.col, BoardSquare(squareColor(pos), pos, piece))
+    squares = squares.updated(pos.row, row)
 
 
 
