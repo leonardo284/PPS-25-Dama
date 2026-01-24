@@ -75,15 +75,25 @@ class GameImpl(player1Name: String, player2Name: String) extends Game:
    * @return either an error message or the applied move
    */
   override def makeMove(move: Move): Either[String, Move] =
-    if (!isMoveByCurrentPlayer(move))
-      return Left("Invalid move")
-  
-    val success = board.movePiece(move)
-  
+    if (!isMoveByCurrentPlayer(move)) return Left("Invalid move")
+
+    val promotionDetected = move.from.piece match {
+      case Some(Man(ColorType.LIGHT)) => move.to.position.row == 0
+      case Some(Man(ColorType.DARK)) => move.to.position.row == Board.Size - 1
+      case _ => false
+    }
+
+    val finalMove = move match {
+      case m: MoveImpl => m.copy(isPromotion = promotionDetected)
+      case _ => move // Fallback if it's another implementation
+    }
+
+    val success = board.movePiece(finalMove)
+
     if (success) {
-      movesHistory = move :: movesHistory
+      movesHistory = finalMove :: movesHistory
       changeTurn()
-      Right(move)
+      Right(finalMove)
     } else {
       Left("Invalid move")
     }
