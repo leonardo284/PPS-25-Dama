@@ -1,22 +1,55 @@
 package model
 
-import enums.{ColorType, PieceType}
+import enums.{ColorType, GameType, PieceType}
 import enums.ColorType.{DARK, LIGHT}
+
 import scala.util.Random
 
-trait Game {
+trait Game(val selectedMode: GameType):
+
+  /**
+   * Returns the current board.
+   *
+   * @return the board
+   */
   def currentBoard: Board
 
+  /**
+   * Returns the player whose turn it is.
+   *
+   * @return the current player
+   */
   def currentTurn: Player
 
+  /**
+   * Attempts to make a move.
+   *
+   * @param move the move to apply
+   * @return either an error message or the applied move
+   */
   def makeMove(move: Move): Either[String, Move]
 
+  /**
+   * Undoes the last move, if any.
+   *
+   * @return true if a move was undone, false otherwise
+   */
   def undoMove(): Boolean
 
+  /**
+   * Retrieves the two players participating in the current game session.
+   *
+   * @return a tuple containing the first player (Light) and the second player (Dark).
+   */
   def getPlayers: (Player, Player)
 
+  /**
+   * Provides the full history of moves performed during the match.
+   * Useful for tracking undoing moves, or generating game logs.
+   *
+   * @return a list of Move objects representing the chronological sequence of plays.
+   */
   def getMoves: List[Move]
-}
 
 
 /**
@@ -25,7 +58,7 @@ trait Game {
  * @param player1Name first player name
  * @param player2Name second player name
  */
-class GameImpl(player1Name: String, player2Name: String) extends Game:
+class GameImpl(player1Name: String, player2Name: String, selectedMode: GameType) extends Game(selectedMode):
   val board: Board = CheckersBoard()
 
   private val (player1, player2) = assignColors(player1Name, player2Name)
@@ -47,9 +80,21 @@ class GameImpl(player1Name: String, player2Name: String) extends Game:
     move.from.piece.get.color == currentTurn.color
 
   private def changeTurn(): Unit = turn = if (turn == player1) player2 else player1
-  
+
+  /**
+   * Retrieves the two players participating in the current game session.
+   *
+   * @return a tuple containing the first player and the second player.
+   */
   override def getPlayers: (Player, Player) = (player1, player2)
 
+
+  /**
+   * Provides the full history of moves performed during the match.
+   * Useful for tracking undoing moves, or generating game logs.
+   *
+   * @return a list of Move objects representing the chronological sequence of plays.
+   */
   override def getMoves: List[Move] = movesHistory
 
 
