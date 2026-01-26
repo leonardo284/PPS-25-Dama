@@ -40,7 +40,7 @@ trait GamePage:
   def logError(errorMsg: String): Unit
 
   /**
-   * Initializes the graphical components of the checkerboard (buttons, grid, etc.).
+   * Initializes the graphical components of the checkerboard.
    */
   def initializeChecker(): Unit
 
