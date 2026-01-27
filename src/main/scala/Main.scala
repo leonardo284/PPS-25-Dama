@@ -1,7 +1,4 @@
-import controller.{CheckersController, GameController}
-import model.GameImpl
-import model.enums.ColorType
-import view.{CheckersPage, MenuPage}
+import view.MenuPage
 
 import javax.swing.SwingUtilities
 
