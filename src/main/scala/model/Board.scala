@@ -318,6 +318,18 @@ class CheckersBoard extends Board:
 
         // Potential Capture (Jump)
         case Some(square) if square.piece.exists(_.color != piece.color) =>
+
+          val victim = square.piece.get
+
+          // A Man can't eat a king
+          val canJump = (piece, victim) match {
+            case (Man(colorPiece), King(colorVictim)) => false
+            case _ => true
+          }
+
+          if (!canJump)
+            Nil
+
           val jumpPos = Position(
             from.position.row + (2 * dr),
             from.position.col + (2 * dc)
