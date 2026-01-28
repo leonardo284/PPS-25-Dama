@@ -51,6 +51,17 @@ trait Game(val selectedMode: GameType):
    */
   def getMoves: List[Move]
 
+  /**
+   * Executes the movement logic for the AI-controlled player.
+   */
+  def makeAIMove() : Unit
+
+  /**
+   * Indicates if is AI Turn
+   * @return true if is AI turn, else otherwise.
+   */
+  def isAITurn : Boolean
+
 
 /**
  * Represents a single match of checkers.
