@@ -168,4 +168,37 @@ class GameImpl(player1Name: String, player2Name: String, selectedMode: GameType)
     case Nil => false
   }
 
+  /**
+   * Checks whether the current game mode is Player vs AI.
+   * @return true if the selected game mode involves an AI opponent, false otherwise.
+   */
+  private def isAIGame: Boolean = selectedMode == GameType.PvAI
+
+  /**
+   * Identifies and retrieves the AI player participant, if one exists in the current game.
+   * @return an Option containing the AIPlayer if found, or None if both players are human.
+   */
+  private def getAIPlayer: Option[Player] =
+    (player1, player2) match
+      case (ai: AIPlayer, _) => Some(ai)
+      case (_, ai: AIPlayer) => Some(ai)
+      case _ => None
+
+  /**
+   * Indicates if is AI Turn
+   *
+   * @return true if is AI turn, else otherwise.
+   */
+  override def isAITurn : Boolean = isAIGame && getAIPlayer.isDefined && getAIPlayer.get == turn
+
+  /**
+   * Executes the movement logic for the AI-controlled player.
+   * In the event that multiple moves are available, this method ensures
+   * compliance with mandatory capture rules.
+   */
+  override def makeAIMove(): Unit =
+    if(isAIGame)
+      var possibleMoves = board.getAllPossibleMoves(getAIPlayer.get)
+      if(possibleMoves.nonEmpty)
+        makeMove(possibleMoves.head)
 
