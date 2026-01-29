@@ -2,6 +2,7 @@ package model
 
 import enums.{ColorType, GameType, PieceType}
 import enums.ColorType.{DARK, LIGHT}
+import model.enums.GameType.{PvAI, PvP}
 
 import scala.util.Random
 
@@ -66,25 +67,17 @@ trait Game(val selectedMode: GameType):
 /**
  * Represents a single match of checkers.
  *
- * @param player1Name first player name
- * @param player2Name second player name
+ * @param player1 first player
+ * @param player2 second player
  */
-class GameImpl(player1Name: String, player2Name: String, selectedMode: GameType) extends Game(selectedMode):
+class GameImpl(val player1: Player, val player2: Player, selectedMode: GameType) extends Game(selectedMode):
   val board: Board = CheckersBoard()
-
-  private val (player1, player2) = assignColors(player1Name, player2Name)
 
   private var movesHistory: List[Move] = List.empty
 
   private var turn: Player = player1.color match
     case ColorType.LIGHT => player1
     case _ => player2
-
-  private def assignColors(name1: String, name2: String): (Player, Player) =
-    if Random.nextBoolean() then
-      (Player(name1, ColorType.LIGHT), Player(name2, ColorType.DARK))
-    else
-      (Player(name1, ColorType.DARK), Player(name2, ColorType.LIGHT))
 
   private def isMoveByCurrentPlayer(move: Move): Boolean = move.player == currentTurn &&
     move.from.piece.isDefined &&
@@ -201,4 +194,28 @@ class GameImpl(player1Name: String, player2Name: String, selectedMode: GameType)
       var possibleMoves = board.getAllPossibleMoves(getAIPlayer.get)
       if(possibleMoves.nonEmpty)
         makeMove(possibleMoves.head)
+
+
+/**
+ * Companion object for Game.
+ */
+object Game:
+  /** PvP Mode*/
+  def apply(name1: String, name2: String): Game =
+    val (color1, color2) = randomColors()
+    val p1 = HumanPlayer(name1, color1)
+    val p2 = HumanPlayer(name2, color2)
+    new GameImpl(p1, p2, GameType.PvP)
+
+  /** Player vs AI Mode*/
+  def apply(playerName: String): Game =
+    val (color1, color2) = randomColors()
+    val p1 = HumanPlayer(playerName, color1)
+    val p2 = AIPlayer(color2)
+    new GameImpl(p1, p2, GameType.PvAI)
+
+  private def randomColors(): (ColorType, ColorType) =
+    if Random.nextBoolean() then (LIGHT, DARK) else (DARK, LIGHT)
+
+
 

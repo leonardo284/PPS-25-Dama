@@ -1,9 +1,9 @@
 package view
 
 import java.awt.FlowLayout
-import javax.swing._
+import javax.swing.*
 import controller.CheckersController
-import model.GameImpl
+import model.{Game, GameImpl}
 import model.enums.GameType
 
 /**
@@ -72,7 +72,10 @@ class MenuPage {
 
       // Initialize the Game on the Event Dispatch Thread
       SwingUtilities.invokeLater { () =>
-        val model = new GameImpl(p1Name, p2Name, selectedMode)
+        val model = selectedMode match {
+          case GameType.PvP  => Game(p1Name, p2Name) 
+          case GameType.PvAI => Game(p1Name)         
+        }
         val view = new CheckersPage()
         val controller = new CheckersController(model, view)
 
