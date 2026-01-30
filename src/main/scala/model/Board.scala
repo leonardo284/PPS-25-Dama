@@ -95,6 +95,18 @@ trait Board:
    */
   def undoMovePiece(move: Move): Boolean
 
+
+  /**
+   * Calculates and returns all legal moves currently available for a specific player.
+   * This method iterates through every piece on the board belonging to the 
+   * specified color and aggregates all valid actions, including simple 
+   * diagonal moves and jumps (captures).
+   *
+   * @param player The player for whom to calculate available moves.
+   * @return A list of all valid Move objects for the selected player.
+   */
+  def getAllPossibleMoves(player: Player) : List[Move]
+
 /**
  * Represents the checkers board.
  */
@@ -484,12 +496,53 @@ class CheckersBoard extends Board:
     val row = squares(pos.row).updated(pos.col, BoardSquare(squareColor(pos), pos, piece))
     squares = squares.updated(pos.row, row)
 
+  /**
+   * Calculates and returns all legal moves currently available for a specific player.
+   * This method iterates through every piece on the board belonging to the 
+   * specified color and aggregates all valid actions, including simple 
+   * diagonal moves and jumps (captures).
+   *
+   * @param player The player for whom to calculate available moves.
+   * @return A list of all valid Move objects for the selected player.
+   */
+  override def getAllPossibleMoves(player: Player): List[Move] =
+
+    val allPotentialMoves = allSquares.toList
+      .filter(s => s.piece.exists(_.color == player.color)) // Filtering current player's pieces
+      .flatMap { fromSquare =>
+        // for each piece get the possible moves
+        possibleMoves(fromSquare).map { toSquare =>
+          // Create the Move object
+          val capturedSquare = getCapturablePieceBetween(fromSquare, toSquare, fromSquare.piece.get)
+
+          // Check if this move results in a promotion to King
+          val willBePromoted = fromSquare.piece match {
+            case Some(Man(LIGHT)) if toSquare.position.row == 0 => true
+            case Some(Man(DARK)) if toSquare.position.row == Board.Size - 1 => true
+            case _ => false
+          }
+
+          MoveImpl(
+            from = fromSquare,
+            to = toSquare,
+            captured = capturedSquare,
+            player = player,
+            isPromotion = willBePromoted
+          )
+        }
+      }
+
+    // Apply the mandatory capture rule:
+    // If jump moves exist, return only those.
+    // Otherwise, return all simple moves.
+    val jumpMoves = allPotentialMoves.filter(_.captured.nonEmpty)
+
+    if (jumpMoves.nonEmpty) then jumpMoves else allPotentialMoves
 
 
 /**
  * Companion object for Board.
  */
-object Board {
+object Board:
   val Size: Int = 8
   val PieceRowNumber: Int = 3
-}
