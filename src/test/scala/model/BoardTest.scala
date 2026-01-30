@@ -7,8 +7,8 @@ import model.enums.PieceType
 
 class BoardTest extends AnyFunSuite with Matchers {
 
-  private val playerDark = Player("Alice", DARK)
-  private val playerLight = Player("Bob", LIGHT)
+  private val playerDark = HumanPlayer("Alice", DARK)
+  private val playerLight = HumanPlayer("Bob", LIGHT)
 
   test("Board should be initialized with 64 squares") {
     val board = new CheckersBoard()

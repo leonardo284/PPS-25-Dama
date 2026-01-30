@@ -7,7 +7,7 @@ import org.scalatest.EitherValues._
 
 class GameTest extends AnyFunSuite with Matchers {
   test("Game should initialize players with different colors") {
-    val game = new GameImpl("Alice", "Bob")
+    val game = Game("Alice", "Bob")
     val (p1, p2) = game.getPlayers
 
     // Ensure both colors are assigned across the two players
@@ -16,7 +16,7 @@ class GameTest extends AnyFunSuite with Matchers {
   }
 
   test("Game should correctly identify the starting player (LIGHT)") {
-    val game = new GameImpl("Alice", "Bob")
+    val game = Game("Alice", "Bob")
     val (p1, p2) = game.getPlayers
 
     // Light usually starts; verify currentTurn matches the player with LIGHT color
@@ -25,7 +25,7 @@ class GameTest extends AnyFunSuite with Matchers {
   }
 
   test("makeMove should fail if a player tries to move out of turn") {
-    val game = new GameImpl("Alice", "Bob")
+    val game = Game("Alice", "Bob")
     val (p1, p2) = game.getPlayers
 
     // Identify the player who is NOT currently active
@@ -46,7 +46,7 @@ class GameTest extends AnyFunSuite with Matchers {
   }
 
   test("Successful makeMove should update history and switch turn") {
-    val game = new GameImpl("Alice", "Bob")
+    val game = Game("Alice", "Bob")
     val initialTurn = game.currentTurn
 
     // Select coordinates based on the current player's side
@@ -66,7 +66,7 @@ class GameTest extends AnyFunSuite with Matchers {
   }
 
   test("undoMove should restore the previous turn and clean history") {
-    val game = new GameImpl("Alice", "Bob")
+    val game = Game("Alice", "Bob")
     val initialTurn = game.currentTurn
     // Execute a standard opening move
     val fromPos = if (initialTurn.color == LIGHT) Position(5, 0) else Position(2, 1)
@@ -86,7 +86,7 @@ class GameTest extends AnyFunSuite with Matchers {
   }
 
   test("undoMove should return false when no moves have been played") {
-    val game = new GameImpl("Alice", "Bob")
+    val game = Game("Alice", "Bob")
     game.undoMove() shouldBe false
   }
 }
