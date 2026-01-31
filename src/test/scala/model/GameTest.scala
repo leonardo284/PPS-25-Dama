@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers
 import model.enums.ColorType.{DARK, LIGHT}
 import org.scalatest.EitherValues._
 
-class GameTest extends AnyFunSuite with Matchers {
+class GameTest extends AnyFunSuite with Matchers:
   test("Game should initialize players with different colors") {
     val game = Game("Alice", "Bob")
     val (p1, p2) = game.getPlayers
@@ -89,4 +89,16 @@ class GameTest extends AnyFunSuite with Matchers {
     val game = Game("Alice", "Bob")
     game.undoMove() shouldBe false
   }
-}
+
+  test("makeAIMove should correctly identify if it is AI turn based on assigned color") {
+    val game = Game("HumanPlayer") // PvAI mode
+    val (p1, p2) = game.getPlayers
+    val aiPlayer = if (p1.isInstanceOf[AIPlayer]) p1 else p2
+
+    // If AI is LIGHT, it must be its turn immediately
+    if (aiPlayer.color == LIGHT) {
+      game.isAITurn shouldBe true
+    } else {
+      game.isAITurn shouldBe false
+    }
+  }
