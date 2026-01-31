@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers
 import model.enums.ColorType.{DARK, LIGHT}
 import model.enums.PieceType
 
-class BoardTest extends AnyFunSuite with Matchers {
+class BoardTest extends AnyFunSuite with Matchers:
 
   private val playerDark = HumanPlayer("Alice", DARK)
   private val playerLight = HumanPlayer("Bob", LIGHT)
@@ -137,4 +137,62 @@ class BoardTest extends AnyFunSuite with Matchers {
     pieceAtDest.get.pieceType shouldBe PieceType.King
     pieceAtDest.get.color shouldBe LIGHT
   }
-}
+
+  test("getAllPossibleMoves should return all 7 legal moves for LIGHT at start of game") {
+    val board = new CheckersBoard()
+
+    // In the initial state, LIGHT (White) should have exactly 7 possible moves
+    // Pieces at (5,0), (5,2), (5,4), (5,6)
+    // - (5,0) can move to (4,1) -> 1 move
+    // - (5,2) can move to (4,1) and (4,3) -> 2 moves
+    // - (5,4) can move to (4,3) and (4,5) -> 2 moves
+    // - (5,6) can move to (4,5) and (4,7) -> 2 moves
+    // Total = 7
+
+    val lightMoves = board.getAllPossibleMoves(playerLight)
+
+    lightMoves.length shouldBe 7
+
+    // Verify that all returned moves are indeed for the LIGHT player
+    all(lightMoves.map(_.player.color)) shouldBe LIGHT
+
+    // Verify no capture is possible at the start
+    all(lightMoves.map(_.captured)) shouldBe None
+  }
+
+  test("getAllPossibleMoves should return all 7 legal moves for DARK at start of game") {
+    val board = new CheckersBoard()
+
+    // Similarly, DARK (Black) should have 7 possible moves
+    // Pieces at (2,1), (2,3), (2,5), (2,7)
+    val darkMoves = board.getAllPossibleMoves(playerDark)
+
+    darkMoves.length shouldBe 7
+    all(darkMoves.map(_.player.color)) shouldBe DARK
+  }
+
+  test("getAllPossibleMoves should prioritize captures (mandatory jump rule)") {
+    val board = new CheckersBoard()
+
+    // 1. Setup a situation where a capture is possible
+    // Move DARK piece from (2,1) to (3,2)
+    val dFrom = board.getSquare(Position(2, 1)).get
+    val dTo = board.getSquare(Position(3, 2)).get
+    board.movePiece(MoveImpl(dFrom, dTo, None, playerDark, false))
+
+    // Move LIGHT piece from (5,4) to (4,3)
+    val lFrom = board.getSquare(Position(5, 4)).get
+    val lTo = board.getSquare(Position(4, 3)).get
+    board.movePiece(MoveImpl(lFrom, lTo, None, playerLight, false))
+
+    // 2. Now DARK has a capture move available (3,2 -> 5,4 capturing 4,3)
+    // According to your implementation, only jump moves should be returned
+    val darkMoves = board.getAllPossibleMoves(playerDark)
+
+    // Check that all returned moves are captures
+    darkMoves.nonEmpty shouldBe true
+    all(darkMoves.map(_.captured)) shouldBe defined
+
+    // Specifically, check the landing position of the jump
+    darkMoves.map(_.to.position) should contain(Position(5, 4))
+  }
