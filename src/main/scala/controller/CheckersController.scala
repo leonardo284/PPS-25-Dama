@@ -4,7 +4,7 @@ import model.{GameImpl, Game, Move, Piece, MoveImpl, Player, Position, Square}
 import view.GamePage
 
 
-class CheckersController(game: GameImpl, view : GamePage) extends GameController(game, view) :
+class CheckersController(game: Game, view : GamePage) extends GameController(game, view) :
 
   private var selected: Option[Square] = None
 
@@ -15,7 +15,7 @@ class CheckersController(game: GameImpl, view : GamePage) extends GameController
    *
    * @param square the square containing the piece to be selected.
    */
-  private def selectSquare(square: Square) =
+  private def selectSquare(square: Square): Unit =
     selected = Some(square)
     val moves = game.currentBoard.possibleMoves(square)
     println(moves)
@@ -28,7 +28,7 @@ class CheckersController(game: GameImpl, view : GamePage) extends GameController
    * This method resets any active highlights and re-renders the board to ensure
    * the UI is clean and synchronized with the current model state.
    */
-  private def deselectSquare() =
+  private def deselectSquare(): Unit =
     selected = None
     view.resetBoardColors()
     view.render(game.currentBoard)
