@@ -1,5 +1,6 @@
 package controller
 
+import model.enums.GameType.PvAI
 import model.{Game, Move, Player, Position, Square}
 import view.GamePage
 
@@ -42,6 +43,10 @@ trait GameController(val game: Game, view : GamePage) :
     view.show()
     view.render(game.currentBoard)
 
+    if(game.isAITurn)
+      makeAIMove()
+
+
   /**
    * Attempts to execute a move in the game model.
    * If successful, the view is updated; otherwise, an error is logged.
@@ -50,9 +55,35 @@ trait GameController(val game: Game, view : GamePage) :
    */
   def makeMove(move: Move): Unit =
     game.makeMove(move) match {
-      case Right(_) => view.render(game.currentBoard)
+      case Right(_) =>
+        view.render(game.currentBoard)
+        if(game.isAITurn)
+          makeAIMove()
+
       case Left(err) => view.logError("Mossa non valida!")
     }
+
+
+  /**
+   * Handles the AI's turn by executing its move logic in a background thread.
+   * Simulates a "thinking" delay for better UX, and then updates the game state.
+   */
+  private def makeAIMove(): Unit =
+    view.disableInput()
+    new Thread(() => {
+      try {
+        Thread.sleep(1000)    // Wait for 1 second to simulate AI thinking time
+
+        game.makeAIMove()
+
+        javax.swing.SwingUtilities.invokeLater(() => {
+          view.render(game.currentBoard)
+          view.enableInput()
+        })
+      } catch {
+        case e: InterruptedException => Thread.currentThread().interrupt()
+      }
+    }).start()
 
   /**
    * Retrieves the Player object whose turn it is currently.
