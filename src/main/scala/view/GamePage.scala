@@ -49,3 +49,13 @@ trait GamePage:
    */
   def resetBoardColors(): Unit
 
+  /**
+   * Disables user interactions with the board (e.g., during AI turn).
+   */
+  def disableInput(): Unit
+
+  /**
+   * Re-enables user interactions with the board.
+   */
+  def enableInput(): Unit
+
