@@ -125,6 +125,41 @@ class CheckersPage() extends GamePage:
   }
 
   /**
+   * Disables user interactions with the board (e.g., during AI turn).
+   */
+  override def disableInput(): Unit = {
+    frame.getContentPane.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR))
+
+    // Disable all clickable buttons
+    for {
+      row <- 0 until Board.Size
+      col <- 0 until Board.Size
+      btn = buttons(row)(col)
+      if (row + col) % 2 != 0 // Only dark squares (the clickable ones)
+    } {
+      btn.setEnabled(false)
+      btn.setDisabledIcon(btn.getIcon)
+    }
+  }
+
+  /**
+   * Re-enables user interactions with the board.
+   */
+  override def enableInput(): Unit = {
+    // Restore the default cursor
+    frame.getContentPane.setCursor(java.awt.Cursor.getDefaultCursor)
+
+    // Re-enable buttons on dark squares
+    for {
+      row <- 0 until Board.Size
+      col <- 0 until Board.Size
+      btn = buttons(row)(col)
+      if (row + col) % 2 != 0
+    } btn.setEnabled(true)
+  }
+
+
+  /**
    * Initializes the graphical components of the checkerboard.
    */
   override def initializeChecker(): Unit = {
