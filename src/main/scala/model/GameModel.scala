@@ -63,6 +63,20 @@ trait Game(val selectedMode: GameType):
    */
   def isAITurn : Boolean
 
+  /**
+   * Determines if the game has ended.
+   * A game is finished if the current player has no pieces left or no legal moves available.
+   */
+  def isGameFinished: Boolean
+
+  /**
+   * Returns the winner of the match, if any.
+   * The winner is the player whose opponent has no pieces or no valid moves remaining.
+   * @return an Option containing the winning Player, or None if the game is still ongoing.
+   */
+   def getWinner: Option[Player]
+
+
 
 /**
  * Represents a single match of checkers.
