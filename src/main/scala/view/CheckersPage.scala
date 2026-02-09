@@ -1,9 +1,10 @@
 package view
 
 import controller.GameController
+
 import java.awt.{BorderLayout, Color, Dimension, FlowLayout, Font, GridLayout, Image}
-import javax.swing.{BorderFactory, ImageIcon, JButton, JFrame, JLabel, JPanel, SwingConstants}
-import model.{Board, Position, Player}
+import javax.swing.{BorderFactory, BoxLayout, ImageIcon, JButton, JFrame, JLabel, JOptionPane, JPanel, SwingConstants}
+import model.{Board, Player, Position}
 import model.enums.ColorType
 import model.enums.ColorType.{DARK, LIGHT}
 
@@ -11,6 +12,9 @@ class CheckersPage() extends GamePage:
 
   private val frame = new JFrame("Dama")
   private val boardPanel = new JPanel(new GridLayout(Board.Size, Board.Size))
+
+  private val btnNewGame = new JButton("Nuova Partita")
+  private val btnExit = new JButton("Esci")
 
   private val p1Label = new JLabel("", SwingConstants.CENTER)
   private val p2Label = new JLabel("", SwingConstants.CENTER)
@@ -55,14 +59,44 @@ class CheckersPage() extends GamePage:
 
     // --- Top Panel Configuration ---
     // A grid with 1 row and 2 columns for Player 1 and Player 2 labels
-    val topPanel = new JPanel(new GridLayout(1, 2))
+    val topContainer = new JPanel()
+    topContainer.setLayout(new BoxLayout(topContainer, BoxLayout.Y_AXIS))
+
+    // Buttons bar (Nuova Partita / Esci)
+    val controlBar = new JPanel(new FlowLayout(FlowLayout.RIGHT))
+    btnNewGame.setFocusable(false)
+    btnExit.setFocusable(false)
+    controlBar.add(btnNewGame)
+    controlBar.add(btnExit)
+
+    // Players info
+    val infoPanel = new JPanel(new GridLayout(1, 2))
     List(p1Label, p2Label).foreach { l =>
       l.setFont(new Font("SansSerif", Font.BOLD, 18))
-      l.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10))
-      l.setIconTextGap(15)
+      l.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10))
     }
-    topPanel.add(p1Label)
-    topPanel.add(p2Label)
+    infoPanel.add(p1Label)
+    infoPanel.add(p2Label)
+
+    topContainer.add(controlBar)
+    topContainer.add(infoPanel)
+
+    // --- Action Listeners ---
+    btnNewGame.addActionListener(_ => {
+      val res = JOptionPane.showConfirmDialog(frame, "Vuoi ricominciare la partita?", "Nuova Partita", JOptionPane.YES_NO_OPTION)
+      if (res == JOptionPane.YES_OPTION) {
+        frame.dispose()
+        new MenuPage().show() // Back to Menu
+      }
+    })
+
+    btnExit.addActionListener(_ => {
+      val res = JOptionPane.showConfirmDialog(frame, "Sei sicuro di voler uscire e tornare al menu?", "Conferma Uscita", JOptionPane.YES_NO_OPTION)
+      if (res == JOptionPane.YES_OPTION) {
+        frame.dispose()
+        new MenuPage().show() // Back to Menu
+      }
+    })
 
     // --- Board Panel Configuration ---
     // Add a dark brown border to simulate a wooden frame
@@ -78,7 +112,7 @@ class CheckersPage() extends GamePage:
     errorLogLabel.setForeground(Color.RED)
     bottomPanel.add(errorLogLabel)
 
-    frame.add(topPanel, BorderLayout.NORTH)
+    frame.add(topContainer, BorderLayout.NORTH)
     frame.add(boardPanel, BorderLayout.CENTER)
     frame.add(bottomPanel, BorderLayout.SOUTH)
 
