@@ -285,43 +285,13 @@ class CheckersBoard extends Board:
       )
   }
 
-
   /**
-   * Retrieves the piece at a specific position.
-   *
-   * @param pos the board position to check.
-   * @return an Option containing the Piece if present, None otherwise.
-   */
-  override def getPiece(pos: Position): Option[Piece] = squares(pos.row)(pos.col).piece
-
-  /**
-   * Retrieves the square object at a specific position.
-   *
-   * @param pos the board position to check.
-   * @return an Option containing the Square if within bounds, None otherwise.
-   */
-  override def getSquare(pos: Position): Option[Square] =
-    if (isInsideBoard(pos)) Some(squares(pos.row)(pos.col))
-    else None
-
-  /**
-   * Returns the square at a given position.
-   *
-   * @param pos the board's position.
-   * @return an optional square if the position is inside the board.
-   */
-  override def squareAt(pos: Position): Option[Square] =
-    if isInsideBoard(pos)
-    then Some(squares(pos.row)(pos.col))
-    else None
-
-  /**
-   * Calculates all legal moves (both normal moves and captures) for a given square.
+   * Calculates all legal reachable destinations from the given square.
    *
    * @param from the starting square.
    * @return a list of possible destination squares.
    */
-  override def possibleMoves(from: Square): List[Square] =
+  private def possibleDestinationsFromSquare(from: Square): List[Square] =
     val piece = from.piece.getOrElse(return List.empty)
 
     // Iterate through all potential directions based on piece type (2 for Man, 4 for King).
@@ -363,6 +333,35 @@ class CheckersBoard extends Board:
       }
     }
 
+
+  /**
+   * Retrieves the piece at a specific position.
+   *
+   * @param pos the board position to check.
+   * @return an Option containing the Piece if present, None otherwise.
+   */
+  override def getPiece(pos: Position): Option[Piece] = squares(pos.row)(pos.col).piece
+
+  /**
+   * Retrieves the square object at a specific position.
+   *
+   * @param pos the board position to check.
+   * @return an Option containing the Square if within bounds, None otherwise.
+   */
+  override def getSquare(pos: Position): Option[Square] =
+    if (isInsideBoard(pos)) Some(squares(pos.row)(pos.col))
+    else None
+
+  /**
+   * Returns the square at a given position.
+   *
+   * @param pos the board's position.
+   * @return an optional square if the position is inside the board.
+   */
+  override def squareAt(pos: Position): Option[Square] =
+    if isInsideBoard(pos)
+    then Some(squares(pos.row)(pos.col))
+    else None
 
   /**
    * Executes a piece movement on the board.
@@ -418,7 +417,7 @@ class CheckersBoard extends Board:
    *
    * @return a Seq containing all Square objects.
    */
-  override def allSquares: Seq[Square] = squares.flatten
+  override def allSquares: List[Square] = squares.flatten.toList
 
   /**
    * Returns an iterator that provides pairs of positions and their corresponding squares.
@@ -513,11 +512,11 @@ class CheckersBoard extends Board:
    */
   override def getAllPossibleMoves(player: Player): List[Move] =
 
-    val allPotentialMoves = allSquares.toList
+    val allPotentialMoves = allSquares
       .filter(s => s.piece.exists(_.color == player.color)) // Filtering current player's pieces
       .flatMap { fromSquare =>
         // for each piece get the possible moves
-        possibleMoves(fromSquare).map { toSquare =>
+        possibleDestinationsFromSquare(fromSquare).map { toSquare =>
           // Create the Move object
           val capturedSquare = getCapturablePieceBetween(fromSquare, toSquare, fromSquare.piece.get)
 
