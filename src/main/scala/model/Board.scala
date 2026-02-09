@@ -31,13 +31,6 @@ trait Board:
   def squareAt(pos: Position): Option[Square]
 
   /**
-   * Calculates all legal moves (both normal moves and captures) for a given square.
-   * @param from the starting square.
-   * @return a list of possible destination squares.
-   */
-  def possibleMoves(from: Square): List[Square]
-
-  /**
    * Executes a piece movement on the board.
    * @param move the move object containing source, destination, and potential captured pieces.
    * @return true if the move was valid and successfully applied, false otherwise.
@@ -54,7 +47,7 @@ trait Board:
    * Returns a flat sequence of all squares.
    * @return a Seq containing all Square objects.
    */
-  def allSquares: Seq[Square]
+  def allSquares: List[Square]
 
   /**
    * Returns an iterator that provides pairs of positions and their corresponding squares.
@@ -106,6 +99,19 @@ trait Board:
    * @return A list of all valid Move objects for the selected player.
    */
   def getAllPossibleMoves(player: Player) : List[Move]
+
+  /**
+   * Calculates and returns all legal moves from a square for a specific player.
+   *
+   * @param player The player for whom to calculate available moves.
+   * @param from The square from to move.
+   * @return A list of all valid Move objects for the selected player.
+   */
+  def getAllPossibleMovesFromSquare(player: Player, from: Square): List[Move] = getAllPossibleMoves(player).filter(m => m.from == from)
+
+
+  //def getPiecesWithColor(color: ColorType): List[Piece] = allSquares.filter(s => s.piece.isDefined && s.piece.get.color == color)
+    //                                                                  .map(s => s.piece.get)
 
 /**
  * Represents the checkers board.
