@@ -59,3 +59,10 @@ trait GamePage:
    */
   def enableInput(): Unit
 
+  /**
+   * Displays a message to announce the winner.
+   *
+   * @param winnerName the name of the player who won the match.
+   */
+  def showWinner(winnerName: String): Unit
+
