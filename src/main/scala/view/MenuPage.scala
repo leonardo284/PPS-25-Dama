@@ -19,7 +19,7 @@ class MenuPage {
 
   private val modeComboBox = new JComboBox[GameType](GameType.values)
 
-  private val startButton = new JButton("Start")
+  private val startButton = new JButton("Inizia Partita")
   private val exitButton = new JButton("Exit")
 
   private val mainPanel = new JPanel()
