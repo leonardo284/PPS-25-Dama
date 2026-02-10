@@ -86,7 +86,7 @@ class BoardTest extends AnyFunSuite with Matchers:
     val board = new CheckersBoard()
     // Setup for a piece that can only perform normal moves/captures
     val square = board.getSquare(Position(2, 1)).get
-    val moves = board.possibleMoves(square)
+    val moves = board.possibleDestinations(square)
 
     // At the start, a DARK Man at (2,1) should have moves to (3,0) and (3,2)
     moves.map(_.position) should contain allOf (Position(3, 0), Position(3, 2))
