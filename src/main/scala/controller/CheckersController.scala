@@ -17,9 +17,9 @@ class CheckersController(game: Game, view : GamePage) extends GameController(gam
    */
   private def selectSquare(square: Square): Unit =
     selected = Some(square)
-    val moves = game.currentBoard.possibleMoves(square)
+    val moves = game.currentBoard.getAllPossibleMovesFromSquare(currentPlayer, square)
     println(moves)
-    val movePositions = moves.map(_.position)
+    val movePositions = moves.map(_.to.position)
     view.highlightSquares(movePositions)
     println(s"Selezionata pedina in ${square.position}")
 
@@ -57,9 +57,9 @@ class CheckersController(game: Game, view : GamePage) extends GameController(gam
           // CASE 2: Clicked on an EMPTY or ENEMY cell (Move attempt)
           case Some(toSquare) =>
             // Validate if the move is within the possible moves calculated by the board logic
-            val possibleMoves = game.currentBoard.possibleMoves(fromSquare)
+            val possibleMoves = game.currentBoard.getAllPossibleMovesFromSquare(currentPlayer, fromSquare)
   
-            if (possibleMoves.exists(_.position == pos)) {
+            if (possibleMoves.exists(_.to.position == pos)) {
               // Target cell is valid: construct and execute the move
               val movingPiece = fromSquare.piece.get
               val move = MoveImpl(
