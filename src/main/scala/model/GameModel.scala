@@ -210,6 +210,27 @@ class GameImpl(val player1: Player, val player2: Player, selectedMode: GameType)
         makeMove(possibleMoves.head)
 
 
+  private def player1CanMove = board.getAllPossibleMoves(player1).nonEmpty
+  private def player2CanMove = board.getAllPossibleMoves(player2).nonEmpty
+
+  /**
+   * Determines if the game has ended.
+   * A game is finished if the current player has no pieces left or no legal moves available.
+   */
+  override def isGameFinished: Boolean =
+    // The game is over if at least one player cannot move anymore
+    !player1CanMove || !player2CanMove
+
+  /**
+   * Returns the winner of the match, if any.
+   * The winner is the player whose opponent has no pieces or no valid moves remaining.
+   * @return an Option containing the winning Player, or None if the game is still ongoing.
+   */
+  override def getWinner: Option[Player] =
+    (player1CanMove, player2CanMove) match
+      case (true, false) => Some(player1) // Player 2 is stuck, Player 1 wins
+      case (false, true) => Some(player2) // Player 1 is stuck, Player 2 wins
+      case _ => None                      // Either game is ongoing or it's an edge-case draw
 /**
  * Companion object for Game.
  */
