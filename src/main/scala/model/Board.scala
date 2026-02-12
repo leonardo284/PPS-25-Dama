@@ -315,19 +315,20 @@ class CheckersBoard extends Board:
             case _ => true
           }
 
-          if (!canJump)
-            Nil
+          if (canJump) then
+            val jumpPos = Position(
+              from.position.row + (2 * dr),
+              from.position.col + (2 * dc)
+            )
 
-          val jumpPos = Position(
-            from.position.row + (2 * dr),
-            from.position.col + (2 * dc)
-          )
+            // The move is valid only if the landing square is within bounds and empty.
+            squareAt(jumpPos) match {
+              case Some(landing) if landing.piece.isEmpty => List(landing)
+              case _ => Nil
+            }
+          else
+            Nil // If it's a Man trying to eat a King, return an empty list for this direction.
 
-          // The move is valid only if the landing square is within bounds and empty.
-          squareAt(jumpPos) match {
-            case Some(landing) if landing.piece.isEmpty => List(landing)
-            case _ => Nil
-          }
         // Square is out of bounds or occupied by a friendly piece.
         case _ => Nil
       }
