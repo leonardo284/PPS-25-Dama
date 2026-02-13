@@ -60,6 +60,11 @@ trait GameController(val game: Game, view : GamePage) :
         if(game.isAITurn)
           makeAIMove()
 
+        // After each move, check if the game has ended
+        if(game.isGameFinished)
+          var winner = game.getWinner
+          view.showWinner(winner.get.name)
+
       case Left(err) => view.logError("Mossa non valida!")
     }
 
