@@ -115,6 +115,7 @@ trait GameController(val game: Game, view : GamePage) :
       else
         // In PvAI mode, we must revert two moves (AI's response + Player's move)
         // to allow the user to retake their turn from the correct state.
+        view.resetBoardColors()
         if (game.selectedMode == PvAI) then
           game.undoMove() // Undo AI move
           game.undoMove() // Undo Player move
