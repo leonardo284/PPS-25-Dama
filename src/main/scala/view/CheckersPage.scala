@@ -1,7 +1,6 @@
 package view
 
 import controller.GameController
-
 import java.awt.{BorderLayout, Color, Dimension, FlowLayout, Font, GridLayout, Image}
 import javax.swing.{BorderFactory, BoxLayout, ImageIcon, JButton, JFrame, JLabel, JOptionPane, JPanel, SwingConstants}
 import model.{Board, Player, Position}
@@ -15,6 +14,7 @@ class CheckersPage() extends GamePage:
 
   private val btnNewGame = new JButton("Nuova Partita")
   private val btnExit = new JButton("Esci")
+  private val btnUndo = new JButton("Undo")
 
   private val p1Label = new JLabel("", SwingConstants.CENTER)
   private val p2Label = new JLabel("", SwingConstants.CENTER)
@@ -58,15 +58,17 @@ class CheckersPage() extends GamePage:
     frame.setLayout(new BorderLayout())
 
     // --- Top Panel Configuration ---
-    // A grid with 1 row and 2 columns for Player 1 and Player 2 labels
     val topContainer = new JPanel()
     topContainer.setLayout(new BoxLayout(topContainer, BoxLayout.Y_AXIS))
 
-    // Buttons bar (Nuova Partita / Esci)
+    // Buttons bar (Nuova Partita / Undo / Esci)
     val controlBar = new JPanel(new FlowLayout(FlowLayout.RIGHT))
     btnNewGame.setFocusable(false)
+    btnUndo.setFocusable(false)
     btnExit.setFocusable(false)
+
     controlBar.add(btnNewGame)
+    controlBar.add(btnUndo)
     controlBar.add(btnExit)
 
     // Players info
@@ -90,6 +92,12 @@ class CheckersPage() extends GamePage:
       }
     })
 
+    // Undo listener
+    btnUndo.addActionListener(_ => {
+      errorLogLabel.setText(" ")
+      controller.undoMove()
+    })
+
     btnExit.addActionListener(_ => {
       val res = JOptionPane.showConfirmDialog(frame, "Sei sicuro di voler uscire e tornare al menu?", "Conferma Uscita", JOptionPane.YES_NO_OPTION)
       if (res == JOptionPane.YES_OPTION) {
@@ -99,14 +107,11 @@ class CheckersPage() extends GamePage:
     })
 
     // --- Board Panel Configuration ---
-    // Add a dark brown border to simulate a wooden frame
     boardPanel.setBorder(BorderFactory.createLineBorder(new Color(60, 30, 10), 4))
-    // Force the board to be a perfect square based on the individual cell size
     val boardDim = cellSize * Board.Size
     boardPanel.setPreferredSize(new Dimension(boardDim, boardDim))
 
     // --- Bottom Panel Configuration ---
-    // FlowLayout is used for the log label to keep it centered
     val bottomPanel = new JPanel(new FlowLayout())
     errorLogLabel.setFont(new Font("SansSerif", Font.PLAIN, 14))
     errorLogLabel.setForeground(Color.RED)
@@ -116,18 +121,16 @@ class CheckersPage() extends GamePage:
     frame.add(boardPanel, BorderLayout.CENTER)
     frame.add(bottomPanel, BorderLayout.SOUTH)
 
-    // Automatically adjust the window size to fit the preferred sizes of its sub-components
     frame.pack()
     frame.setResizable(false)
-    // Center the window on the user's screen
     frame.setLocationRelativeTo(null)
     frame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE)
   }
 
   /**
    * Updates the visual style of a player's label to indicate whether it is their turn.
-   * @param label the JLabel to be updated.
    *
+   * @param label    the JLabel to be updated.
    * @param isActive true if the label should be highlighted, false to reset it.
    */
   private def updateLabelHighlight(label: JLabel, isActive: Boolean): Unit = {
@@ -159,10 +162,11 @@ class CheckersPage() extends GamePage:
   }
 
   /**
-   * Disables user interactions with the board (e.g., during AI turn).
+   * Disables user interactions with the board and undo button (e.g., during AI turn).
    */
   override def disableInput(): Unit = {
     frame.getContentPane.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR))
+    btnUndo.setEnabled(false) // Always disable undo during AI turn to prevent conflicts
 
     // Disable all clickable buttons
     for {
@@ -177,11 +181,11 @@ class CheckersPage() extends GamePage:
   }
 
   /**
-   * Re-enables user interactions with the board.
+   * Re-enables user interactions with the board and undo button.
    */
   override def enableInput(): Unit = {
-    // Restore the default cursor
     frame.getContentPane.setCursor(java.awt.Cursor.getDefaultCursor)
+    btnUndo.setEnabled(controller.canUndo) // Only enable undo if the controller says we actually can
 
     // Re-enable buttons on dark squares
     for {
@@ -205,7 +209,7 @@ class CheckersPage() extends GamePage:
       button.setFocusPainted(false)
       button.setFocusable(false)
       button.setRolloverEnabled(false)
-      button.setMargin(new java.awt.Insets(0, 0, 0, 0)) // Toglie spazio interno
+      button.setMargin(new java.awt.Insets(0, 0, 0, 0))
 
       if (square.colorType == ColorType.LIGHT) {
         button.setBackground(style.light)
@@ -270,6 +274,8 @@ class CheckersPage() extends GamePage:
           button.setDisabledIcon(null)
       }
     })
+
+    btnUndo.setEnabled(controller.canUndo)
 
     val activePlayer = controller.currentPlayer
     updateLabelHighlight(p1Label, p1Label.getText == activePlayer.name)
