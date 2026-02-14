@@ -180,49 +180,54 @@ class CheckersBoard extends Board:
     val from = move.from
     val to = move.to
 
-    if (!isInsideBoard(to.position)) return false
-    if (to.colorType != DARK) return false
-    if (to.piece.isDefined) return false
+    val isStructureValid =
+      isInsideBoard(to.position) &&
+        to.colorType == DARK &&
+        to.piece.isEmpty
 
-    val piece = from.piece.getOrElse(return false)
+    if !isStructureValid then
+      false
+    else
+      from.piece match {
+        case None => false
+        case Some(piece) =>
+          val rowDiff = to.position.row - from.position.row
+          val colDiff = to.position.col - from.position.col
 
-    val rowDiff = to.position.row - from.position.row
-    val colDiff = to.position.col - from.position.col
+          piece match {
+            // ---------------- MAN ----------------
+            case Man(color) =>
+              val rowDir = if (color == ColorType.DARK) 1 else -1
 
-    piece match {
+              val normalMove =
+                rowDiff == rowDir &&
+                  math.abs(colDiff) == 1 /*&&
+                      isValidDestinationPiece(move)*/
 
-      // ---------------- MAN ----------------
-      case Man(color) =>
-        val rowDir = if (color == ColorType.DARK) 1 else -1
+              val captureMove =
+                rowDiff == 2 * rowDir &&
+                  math.abs(colDiff) == 2 &&
+                  hasCapturableManPieceBetween(move) // If a Man is being moved, it can only capture other Man
+              normalMove || captureMove
 
-        val normalMove =
-          rowDiff == rowDir &&
-            math.abs(colDiff) == 1 /*&&
-                isValidDestinationPiece(move)*/
-        
-        val captureMove =
-          rowDiff == 2 * rowDir &&
-            math.abs(colDiff) == 2 &&
-            hasCapturableManPieceBetween(move) // If a Man is being moved, it can only capture other Man
-        normalMove || captureMove
+            // ---------------- KING ----------------
+            case King(_) =>
+              val absRow = math.abs(rowDiff)
+              val absCol = math.abs(colDiff)
 
-      // ---------------- KING ----------------
-      case King(_) =>
-        val absRow = math.abs(rowDiff)
-        val absCol = math.abs(colDiff)
+              val normalMove =
+                absRow == 1 &&
+                  absCol == 1 /*&&
+                      isValidDestinationPiece(move)*/
 
-        val normalMove =
-          absRow == 1 &&
-            absCol == 1 /*&&
-                isValidDestinationPiece(move)*/
+              val captureMove =
+                absRow == 2 &&
+                  absCol == 2 &&
+                  hasCapturablePieceBetween(move)
 
-        val captureMove =
-          absRow == 2 &&
-            absCol == 2 &&
-            hasCapturablePieceBetween(move)
-
-        normalMove || captureMove
-    }
+              normalMove || captureMove
+          }
+      }
 
   /**
    * Verifies that a regular piece (Man) cannot capture a King 
@@ -292,46 +297,48 @@ class CheckersBoard extends Board:
    * @return a list of possible destination squares.
    */
   private def possibleDestinationsFromSquare(from: Square): List[Square] =
-    val piece = from.piece.getOrElse(return List.empty)
+    from.piece match {
+      case None => List.empty
+      case Some(piece) =>
+        // Iterate through all potential directions based on piece type (2 for Man, 4 for King).
+        // Each direction is a tuple (dr = direction row, dc = direction column).
+        // Using flatMap to concatenate the valid destination squares from all directions.
+        moveDirections(piece).flatMap { case (dr, dc) =>
+          val nextPos = Position(from.position.row + dr, from.position.col + dc)
 
-    // Iterate through all potential directions based on piece type (2 for Man, 4 for King).
-    // Each direction is a tuple (dr = direction row, dc = direction column).
-    // Using flatMap to concatenate the valid destination squares from all directions.
-    moveDirections(piece).flatMap { case (dr, dc) =>
-      val nextPos = Position(from.position.row + dr, from.position.col + dc)
+          squareAt(nextPos) match {
+            // Simple Move (empty square)
+            case Some(square) if square.piece.isEmpty => List(square)
 
-      squareAt(nextPos) match {
-        // Simple Move (empty square)
-        case Some(square) if square.piece.isEmpty => List(square)
+            // Potential Capture (Jump)
+            case Some(square) if square.piece.exists(_.color != piece.color) =>
 
-        // Potential Capture (Jump)
-        case Some(square) if square.piece.exists(_.color != piece.color) =>
+              val victim = square.piece.get
 
-          val victim = square.piece.get
+              // A Man can't eat a king
+              val canJump = (piece, victim) match {
+                case (Man(colorPiece), King(colorVictim)) => false
+                case _ => true
+              }
 
-          // A Man can't eat a king
-          val canJump = (piece, victim) match {
-            case (Man(colorPiece), King(colorVictim)) => false
-            case _ => true
+              if canJump then
+                val jumpPos = Position(
+                  from.position.row + (2 * dr),
+                  from.position.col + (2 * dc)
+                )
+
+                // The move is valid only if the landing square is within bounds and empty.
+                squareAt(jumpPos) match {
+                  case Some(landing) if landing.piece.isEmpty => List(landing)
+                  case _ => Nil
+                }
+              else
+                Nil // If it's a Man trying to eat a King, return an empty list for this direction.
+
+            // Square is out of bounds or occupied by a friendly piece.
+            case _ => Nil
           }
-
-          if (canJump) then
-            val jumpPos = Position(
-              from.position.row + (2 * dr),
-              from.position.col + (2 * dc)
-            )
-
-            // The move is valid only if the landing square is within bounds and empty.
-            squareAt(jumpPos) match {
-              case Some(landing) if landing.piece.isEmpty => List(landing)
-              case _ => Nil
-            }
-          else
-            Nil // If it's a Man trying to eat a King, return an empty list for this direction.
-
-        // Square is out of bounds or occupied by a friendly piece.
-        case _ => Nil
-      }
+        }
     }
 
 
@@ -543,7 +550,7 @@ class CheckersBoard extends Board:
     // Otherwise, return all simple moves.
     val jumpMoves = allPotentialMoves.filter(_.captured.nonEmpty)
 
-    if (jumpMoves.nonEmpty) then jumpMoves else allPotentialMoves
+    if jumpMoves.nonEmpty then jumpMoves else allPotentialMoves
 
 
 /**

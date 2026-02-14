@@ -3,7 +3,7 @@ package view
 import java.awt.FlowLayout
 import javax.swing.*
 import controller.CheckersController
-import model.{Game, GameImpl}
+import model.Game
 import model.enums.GameType
 
 /**

@@ -1,8 +1,7 @@
 package model
 
-import enums.{ColorType, GameType, PieceType}
+import enums.{ColorType, GameType}
 import enums.ColorType.{DARK, LIGHT}
-import model.enums.GameType.{PvAI, PvP}
 
 import scala.util.Random
 
@@ -205,7 +204,7 @@ class GameImpl(val player1: Player, val player2: Player, selectedMode: GameType)
    */
   override def makeAIMove(): Unit =
     if(isAIGame)
-      var possibleMoves = board.getAllPossibleMoves(getAIPlayer.get)
+      val possibleMoves = board.getAllPossibleMoves(getAIPlayer.get)
       if(possibleMoves.nonEmpty)
         makeMove(possibleMoves.head)
 

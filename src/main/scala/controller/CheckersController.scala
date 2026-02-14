@@ -1,6 +1,6 @@
 package controller
 
-import model.{GameImpl, Game, Move, Piece, MoveImpl, Player, Position, Square}
+import model.{Game, MoveImpl, Position, Square}
 import view.GamePage
 
 

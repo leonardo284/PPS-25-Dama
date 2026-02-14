@@ -62,7 +62,7 @@ trait GameController(val game: Game, view : GamePage) :
 
         // After each move, check if the game has ended
         if(game.isGameFinished)
-          var winner = game.getWinner
+          val winner = game.getWinner
           view.showWinner(winner.get.name)
 
       case Left(err) => view.logError("Mossa non valida!")
@@ -108,15 +108,15 @@ trait GameController(val game: Game, view : GamePage) :
    * If playing against AI, it undoes both the AI move and the player's last move.
    */
   def undoMove(): Unit =
-    if (game.getMoves.nonEmpty) then
-      if (game.isAITurn) then
+    if game.getMoves.nonEmpty then
+      if game.isAITurn then
         // If it is the AI's turn (thinking phase), undo is disabled to prevent state conflicts
         view.logError("Attendi il turno dell'IA prima di annullare")
       else
         // In PvAI mode, we must revert two moves (AI's response + Player's move)
         // to allow the user to retake their turn from the correct state.
         view.resetBoardColors()
-        if (game.selectedMode == PvAI) then
+        if game.selectedMode == PvAI then
           game.undoMove() // Undo AI move
           game.undoMove() // Undo Player move
         else
@@ -133,7 +133,7 @@ trait GameController(val game: Game, view : GamePage) :
    * * @return true if the undo conditions are met, false otherwise.
    */
   def canUndo: Boolean =
-    if (game.selectedMode == PvAI) then {
+    if game.selectedMode == PvAI then {
       game.getMoves.size >= 2
     } else
       game.getMoves.nonEmpty
