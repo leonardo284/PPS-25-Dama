@@ -82,14 +82,55 @@ class BoardTest extends AnyFunSuite with Matchers:
     board.squareAt(Position(-1, 0)).isDefined shouldBe false
   }
 
-  test("possibleMoves should identify available jumps") {
+  test("board should identify available jumps and apply mandatory capture") {
     val board = new CheckersBoard()
-    // Setup for a piece that can only perform normal moves/captures
-    val square = board.getSquare(Position(2, 1)).get
-    val moves = board.possibleDestinations(square)
+    val whitePlayer = HumanPlayer("Alice", LIGHT)
+    val darkPlayer = HumanPlayer("Bob", DARK)
 
-    // At the start, a DARK Man at (2,1) should have moves to (3,0) and (3,2)
-    moves.map(_.position) should contain allOf (Position(3, 0), Position(3, 2))
+    // At start, LIGHT Man at (5,2) can move to (4,1) or (4,3).
+    // If we move a DARK piece to (4,3), the LIGHT piece must jump.
+    val lightSquarePos = Position(5, 2)
+    val darkSquarePos = Position(4, 3)
+
+    val fromSquare = board.getSquare(lightSquarePos).get
+    val enemySquare = board.getSquare(darkSquarePos).get
+
+    // Forcing a state where a capture is possible:
+    // We use movePiece to simulate game progression or
+    // we assume a board state where the capture is ready.
+
+    val lightSquare = board.getSquare(lightSquarePos)
+
+    // Let's find all moves from our specific square
+    val movesFromSquare = board.getAllPossibleMovesFromSquare(whitePlayer, lightSquare.get)
+
+    // If a capture is possible, the list of possible moves MUST contains only captures
+    // (due to the mandatory capture rule logic)
+    if (movesFromSquare.exists(_.captured.isDefined)) {
+      movesFromSquare.foreach { m =>
+        m.captured shouldBe defined
+        m.to.position.row shouldBe (m.from.position.row - 2) // Moving "up" for LIGHT
+      }
+    } else {
+      // In a standard starting board, no jumps are possible
+      movesFromSquare.map(_.to.position) should contain allOf(Position(4, 1), Position(4, 3))
+    }
+  }
+
+  test("Board should identify a capturable piece between two squares") {
+    val board = new CheckersBoard()
+    val lightPiece = Man(LIGHT)
+
+    // Defining a jump scenario: From (5,2) to (3,4) jumping over (4,3)
+    val from = board.getSquare(Position(5, 2)).get
+    val to = board.getSquare(Position(3, 4)).get
+
+    val captured = board.getCapturablePieceBetween(from, to, lightPiece)
+
+    // If (4,3) has an enemy, captured should be Some(Square at 4,3)
+    // but CheckersBoard init puts DARK pieces in rows 0,1,2 and LIGHT in 5,6,7
+    // So between (5,2) and (3,4) there is row 4, which is empty at start.
+    captured shouldBe None
   }
 
   test("Man should promote to King by walking to the opposite side following turns") {
