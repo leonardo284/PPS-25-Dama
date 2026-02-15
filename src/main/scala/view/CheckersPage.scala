@@ -290,3 +290,35 @@ class CheckersPage() extends GamePage:
    * @param errorMsg the description of the error.
    */
   override def logError(errorMsg: String): Unit = errorLogLabel.setText(errorMsg)
+
+  /**
+   * Displays a message to announce the winner.
+   *
+   * @param winnerName the name of the player who won the match.
+   */
+  override def showWinner(winnerName: String): Unit =
+    // Ensure the UI reflects the final state before showing the popup
+    render(controller.game.currentBoard)
+
+    // Disable inputs so players cannot move or undo after the game is over
+    disableInput()
+    btnUndo.setEnabled(false)
+    btnNewGame.setEnabled(true)
+
+    // Create a custom message or use a standard popup
+    val message = s" $winnerName ha vinto!!!"
+    val title = "Partita terminata!"
+
+    // Show the dialog on the Event Dispatch Thread
+    javax.swing.SwingUtilities.invokeLater(() => {
+      JOptionPane.showMessageDialog(
+        frame,
+        message,
+        title,
+        JOptionPane.INFORMATION_MESSAGE,
+        if (winnerName == p1Label.getText) p1Label.getIcon else p2Label.getIcon
+      )
+      // go to menu page
+      frame.dispose()
+      MenuPage().show()
+    })
