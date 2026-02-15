@@ -1,6 +1,6 @@
 package controller
 
-import model.{Game, MoveImpl, Position, Square}
+import model.{Game, NotYourPiece, Position, Square}
 import view.GamePage
 
 
@@ -18,10 +18,7 @@ class CheckersController(game: Game, view : GamePage) extends GameController(gam
   private def selectSquare(square: Square): Unit =
     selected = Some(square)
     val moves = game.currentBoard.getAllPossibleMovesFromSquare(currentPlayer, square)
-    println(moves)
-    val movePositions = moves.map(_.to.position)
-    view.highlightSquares(movePositions)
-    println(s"Selezionata pedina in ${square.position}")
+    view.highlightSquares(moves.map(_.to.position))
 
   /**
    * Clears the current selection and restores the board's original visual state.
@@ -40,53 +37,31 @@ class CheckersController(game: Game, view : GamePage) extends GameController(gam
    */
   override def onSquareClicked(pos: Position): Unit =
     val clickedSquareOpt = game.currentBoard.squareAt(pos)
-  
-    selected match {
-      // a square has been already selected
-      case Some(fromSquare) =>
-        clickedSquareOpt match {
-          // CASE 1: Clicked on a piece belonging to the current player (Switch or Deselect)
-          case Some(newSquare) if newSquare.piece.exists(_.color == game.currentTurn.color) =>
-            if (fromSquare.position == pos) {
-              deselectSquare()
-            } else {
-              // Change selection and update highlighted move indicators
-              selectSquare(newSquare)
-            }
-  
-          // CASE 2: Clicked on an EMPTY or ENEMY cell (Move attempt)
-          case Some(toSquare) =>
-            // Validate if the move is within the possible moves calculated by the board logic
-            val possibleMoves = game.currentBoard.getAllPossibleMovesFromSquare(currentPlayer, fromSquare)
-  
-            if (possibleMoves.exists(_.to.position == pos)) {
-              // Target cell is valid: construct and execute the move
-              val movingPiece = fromSquare.piece.get
-              val move = MoveImpl(
-                from = fromSquare,
-                to = toSquare,
-                captured = game.currentBoard.getCapturablePieceBetween(fromSquare, toSquare, movingPiece),
-                player = game.currentTurn,
-                isPromotion = false
-              )
-              makeMove(move)
-              deselectSquare() // Clear highlights after successful move
-            } else {
-              // Clicked on an invalid cell: reset selection
-              deselectSquare()
-            }
-  
-          case None => deselectSquare()
-        }
-  
-      case None =>
-        // CASE 3: No previous selection exists
-        clickedSquareOpt match {
-          case Some(square) if square.piece.exists(_.color == game.currentTurn.color) =>
-            selectSquare(square)
-          case _ =>
-            // Feedback for invalid initial selection
-            view.logError("Please select one of your pieces")
-        }
-    }
+    val currentTurnColor = game.currentTurn.color
 
+    (selected, clickedSquareOpt) match
+      // CASE 1: Clicked on the same square already selected -> Deselect
+      case (Some(from), Some(to)) if from.position == to.position => deselectSquare()
+
+      // CASE 2: Clicked on another player's own piece -> Change selection
+      case (_, Some(to)) if to.piece.exists(_.color == currentTurnColor) => selectSquare(to)
+
+      // CASE 3: A piece was selected and clicking elsewhere -> Attempt a move
+      case (Some(from), Some(to)) => handleMoveAttempt(from, to)
+
+      // CASE 4: No selection and clicked on something that doesn't belong to the player
+      case _ =>
+        deselectSquare()
+        view.logError(NotYourPiece.message)
+
+
+  private def handleMoveAttempt(from: Square, to: Square): Unit =
+    val possibleMoves = game.currentBoard.getAllPossibleMovesFromSquare(currentPlayer, from)
+
+    // Check if there is a legal move that lands on 'to'
+    possibleMoves.find(_.to.position == to.position) match
+      case Some(move) =>
+        makeMove(move)
+        deselectSquare()
+      case None =>
+        deselectSquare()

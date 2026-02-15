@@ -2,7 +2,7 @@ package controller
 
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-import model.{Game, Position, Board, Square, MoveImpl}
+import model.{Board, Game, NotYourPiece, Position}
 import model.enums.ColorType.{DARK, LIGHT}
 import view.GamePage
 
@@ -82,7 +82,7 @@ class ControllerTest extends AnyFunSuite with Matchers:
     // Click on an empty center square (3, 3) without selecting a piece first
     controller.onSquareClicked(Position(3, 3))
 
-    view.lastError shouldBe "Please select one of your pieces"
+    view.lastError shouldBe NotYourPiece.message
   }
 
   test("undoMove should revert the move in the model and update the view") {
@@ -99,7 +99,6 @@ class ControllerTest extends AnyFunSuite with Matchers:
 
     // Verify move was popped from history and view was notified
     game.getMoves.size shouldBe (historySizeBeforeUndo - 1)
-    view.lastError shouldBe "Mossa annullata"
     view.lastBoardRendered shouldBe Some(game.currentBoard)
   }
 

@@ -1,7 +1,7 @@
 package controller
 
 import model.enums.GameType.PvAI
-import model.{Game, Move, Player, Position, Square}
+import model.{Game, Move, NoMovesToUndo, Player, Position, Square, WaitingForAI}
 import view.GamePage
 
 /**
@@ -65,7 +65,7 @@ trait GameController(val game: Game, view : GamePage) :
           val winner = game.getWinner
           view.showWinner(winner.get.name)
 
-      case Left(err) => view.logError("Mossa non valida!")
+      case Left(error) => view.logError(error.message)
     }
 
 
@@ -111,7 +111,7 @@ trait GameController(val game: Game, view : GamePage) :
     if game.getMoves.nonEmpty then
       if game.isAITurn then
         // If it is the AI's turn (thinking phase), undo is disabled to prevent state conflicts
-        view.logError("Attendi il turno dell'IA prima di annullare")
+        view.logError(WaitingForAI.message)
       else
         // In PvAI mode, we must revert two moves (AI's response + Player's move)
         // to allow the user to retake their turn from the correct state.
@@ -123,9 +123,8 @@ trait GameController(val game: Game, view : GamePage) :
           game.undoMove() // In PvP mode, undo only the single last move
 
         view.render(game.currentBoard)
-        view.logError("Mossa annullata")
     else
-      view.logError("Nessuna mossa da annullare")
+      view.logError(NoMovesToUndo.message)
 
   /**
    * Checks if an undo operation is currently possible.

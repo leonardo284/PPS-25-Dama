@@ -27,7 +27,7 @@ trait Game(val selectedMode: GameType):
    * @param move the move to apply
    * @return either an error message or the applied move
    */
-  def makeMove(move: Move): Either[String, Move]
+  def makeMove(move: Move): Either[MoveError, Move]
 
   /**
    * Undoes the last move, if any.
@@ -75,15 +75,13 @@ trait Game(val selectedMode: GameType):
    */
    def getWinner: Option[Player]
 
-
-
 /**
  * Represents a single match of checkers.
  *
  * @param player1 first player
  * @param player2 second player
  */
-class GameImpl(val player1: Player, val player2: Player, selectedMode: GameType) extends Game(selectedMode):
+class CheckersGame(val player1: Player, val player2: Player, selectedMode: GameType) extends Game(selectedMode):
   val board: Board = CheckersBoard()
 
   private var movesHistory: List[Move] = List.empty
@@ -92,9 +90,9 @@ class GameImpl(val player1: Player, val player2: Player, selectedMode: GameType)
     case ColorType.LIGHT => player1
     case _ => player2
 
-  private def isMoveByCurrentPlayer(move: Move): Boolean = move.player == currentTurn &&
-    move.from.piece.isDefined &&
-    move.from.piece.get.color == currentTurn.color
+  private def isMoveByCurrentPlayer(move: Move): Boolean =
+    move.player == currentTurn &&
+    move.from.piece.exists(p => p.color == currentTurn.color)
 
   private def changeTurn(): Unit = turn = if (turn == player1) player2 else player1
 
@@ -130,35 +128,38 @@ class GameImpl(val player1: Player, val player2: Player, selectedMode: GameType)
    */
   override def currentTurn: Player = turn
 
+
+  private def determinePromotion(move: Move): Move =
+    val isPromotable = move.from.piece match
+      case Some(Man(LIGHT)) if move.to.position.row == 0 => true
+      case Some(Man(DARK)) if move.to.position.row == Board.Size - 1 => true
+      case _ => false
+
+    move match
+      case m: MoveImpl => m.copy(isPromotion = isPromotable)
+      case _ => move
+
+  private def updateGameState(move: Move): Unit =
+    movesHistory = move :: movesHistory
+    changeTurn()
+
   /**
    * Attempts to make a move.
    *
    * @param move the move to apply
    * @return either an error message or the applied move
    */
-  override def makeMove(move: Move): Either[String, Move] =
-    if (!isMoveByCurrentPlayer(move)) return Left("Invalid move")
-
-    val promotionDetected = move.from.piece match {
-      case Some(Man(ColorType.LIGHT)) => move.to.position.row == 0
-      case Some(Man(ColorType.DARK)) => move.to.position.row == Board.Size - 1
-      case _ => false
-    }
-
-    val finalMove = move match {
-      case m: MoveImpl => m.copy(isPromotion = promotionDetected)
-      case _ => move // Fallback if it's another implementation
-    }
-
-    val success = board.movePiece(finalMove)
-
-    if (success) {
-      movesHistory = finalMove :: movesHistory
-      changeTurn()
-      Right(finalMove)
-    } else {
-      Left("Invalid move")
-    }
+  override def makeMove(move: Move): Either[MoveError, Move] =
+    Right(move)
+      .filterOrElse(isMoveByCurrentPlayer, NotYourPiece)
+      .map(determinePromotion)
+      .flatMap { m =>
+        if board.movePiece(m) then
+          updateGameState(m)
+          Right(m)
+        else
+          Left(IllegalMove)
+      }
 
   /**
    * Undoes the last move, if any.
@@ -195,7 +196,7 @@ class GameImpl(val player1: Player, val player2: Player, selectedMode: GameType)
    *
    * @return true if is AI turn, else otherwise.
    */
-  override def isAITurn : Boolean = isAIGame && getAIPlayer.isDefined && getAIPlayer.get == turn
+  override def isAITurn : Boolean = isAIGame && getAIPlayer.contains(turn)
 
   /**
    * Executes the movement logic for the AI-controlled player.
@@ -239,17 +240,14 @@ object Game:
     val (color1, color2) = randomColors()
     val p1 = HumanPlayer(name1, color1)
     val p2 = HumanPlayer(name2, color2)
-    new GameImpl(p1, p2, GameType.PvP)
+    new CheckersGame(p1, p2, GameType.PvP)
 
   /** Player vs AI Mode*/
   def apply(playerName: String): Game =
     val (color1, color2) = randomColors()
     val p1 = HumanPlayer(playerName, color1)
     val p2 = AIPlayer(color2)
-    new GameImpl(p1, p2, GameType.PvAI)
+    new CheckersGame(p1, p2, GameType.PvAI)
 
   private def randomColors(): (ColorType, ColorType) =
     if Random.nextBoolean() then (LIGHT, DARK) else (DARK, LIGHT)
-
-
-

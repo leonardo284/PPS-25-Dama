@@ -10,7 +10,7 @@ import model.enums.GameType
  * Represents the main menu of the application.
  * Allows users to configure player names and select the game mode.
  */
-class MenuPage {
+class MenuPage :
 
   private val frame = new JFrame("Configurazione Giocatori")
 
@@ -97,8 +97,6 @@ class MenuPage {
   /**
    * Displays the menu window centered on the screen.
    */
-  def show(): Unit = {
+  def show(): Unit =
     frame.setLocationRelativeTo(null)
     frame.setVisible(true)
-  }
-}
