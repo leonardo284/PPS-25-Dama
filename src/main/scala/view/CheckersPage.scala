@@ -3,9 +3,9 @@ package view
 import controller.GameController
 import java.awt.{BorderLayout, Color, Dimension, FlowLayout, Font, GridLayout, Image}
 import javax.swing.{BorderFactory, BoxLayout, ImageIcon, JButton, JFrame, JLabel, JOptionPane, JPanel, SwingConstants}
-import model.{Board, Player, Position}
+import model.{Board, Position}
 import model.enums.ColorType
-import model.enums.ColorType.{DARK, LIGHT}
+import model.enums.ColorType.{DARK}
 
 class CheckersPage() extends GamePage:
 
