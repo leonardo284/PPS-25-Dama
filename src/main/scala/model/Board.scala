@@ -548,9 +548,19 @@ class CheckersBoard extends Board:
     // Apply the mandatory capture rule:
     // If jump moves exist, return only those.
     // Otherwise, return all simple moves.
+
+    // Filter all captures (jumps)
     val jumpMoves = allPotentialMoves.filter(_.captured.nonEmpty)
 
-    if jumpMoves.nonEmpty then jumpMoves else allPotentialMoves
+    if jumpMoves.nonEmpty then
+      // Check specifically for King jumps
+      val kingJumpMoves = jumpMoves.filter(_.from.piece.exists(_.isInstanceOf[King]))
+
+      // If a King can capture, only King captures are allowed
+      if kingJumpMoves.nonEmpty then kingJumpMoves else jumpMoves
+    else
+      // No captures available, return simple moves
+      allPotentialMoves
 
 
 /**
