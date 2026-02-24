@@ -217,9 +217,7 @@ class CheckersGame(val player1: Player, val player2: Player, selectedMode: GameT
    * Determines if the game has ended.
    * A game is finished if the current player has no pieces left or no legal moves available.
    */
-  override def isGameFinished: Boolean =
-    // The game is over if at least one player cannot move anymore
-    !player1CanMove || !player2CanMove
+  override def isGameFinished: Boolean = !player1CanMove || !player2CanMove
 
   /**
    * Returns the winner of the match, if any.
@@ -230,7 +228,7 @@ class CheckersGame(val player1: Player, val player2: Player, selectedMode: GameT
     (player1CanMove, player2CanMove) match
       case (true, false) => Some(player1) // Player 2 is stuck, Player 1 wins
       case (false, true) => Some(player2) // Player 1 is stuck, Player 2 wins
-      case _ => None                      // Either game is ongoing or it's an edge-case draw
+      case _ => None
 /**
  * Companion object for Game.
  */

@@ -36,7 +36,7 @@ class CheckersController(game: Game, view : GamePage) extends GameController(gam
    * @param pos the coordinates of the clicked square.
    */
   override def onSquareClicked(pos: Position): Unit =
-    val clickedSquareOpt = game.currentBoard.squareAt(pos)
+    val clickedSquareOpt = game.currentBoard.getSquare(pos)
     val currentTurnColor = game.currentTurn.color
 
     (selected, clickedSquareOpt) match

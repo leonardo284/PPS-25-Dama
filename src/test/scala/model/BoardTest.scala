@@ -77,9 +77,9 @@ class BoardTest extends AnyFunSuite with Matchers:
   
   test("isInsideBoard should correctly validate boundaries") {
     val board = new CheckersBoard()
-    board.squareAt(Position(0, 0)).isDefined shouldBe true
-    board.squareAt(Position(8, 0)).isDefined shouldBe false
-    board.squareAt(Position(-1, 0)).isDefined shouldBe false
+    board.getSquare(Position(0, 0)).isDefined shouldBe true
+    board.getSquare(Position(8, 0)).isDefined shouldBe false
+    board.getSquare(Position(-1, 0)).isDefined shouldBe false
   }
 
   test("board should identify available jumps and apply mandatory capture") {

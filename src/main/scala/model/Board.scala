@@ -22,13 +22,7 @@ trait Board:
    * @return an Option containing the Square if within bounds, None otherwise.
    */
   def getSquare(pos: Position): Option[Square]
-
-  /**
-   * Returns the square at a given position.
-   * @param pos the board's position.
-   * @return an optional square if the position is inside the board.
-   */
-  def squareAt(pos: Position): Option[Square]
+  
 
   /**
    * Executes a piece movement on the board.
@@ -272,7 +266,7 @@ class CheckersBoard extends Board:
       moveDirections(piece).flatMap { (dr, dc) =>
         val nextPos = Position(from.position.row + dr, from.position.col + dc)
 
-        squareAt(nextPos) match
+        getSquare(nextPos) match
           // Simple Move (empty square)
           case Some(s) if s.piece.isEmpty => List(s)
 
@@ -286,7 +280,7 @@ class CheckersBoard extends Board:
             if canJump then
               val jumpPos = Position(from.position.row + 2 * dr, from.position.col + 2 * dc)
               // The move is valid only if the landing square is within bounds and empty.
-              squareAt(jumpPos).filter(_.piece.isEmpty).toList
+              getSquare(jumpPos).filter(_.piece.isEmpty).toList
             else
               Nil
 
@@ -312,17 +306,7 @@ class CheckersBoard extends Board:
   override def getSquare(pos: Position): Option[Square] =
     if (isInsideBoard(pos)) Some(squares(pos.row)(pos.col))
     else None
-
-  /**
-   * Returns the square at a given position.
-   *
-   * @param pos the board's position.
-   * @return an optional square if the position is inside the board.
-   */
-  override def squareAt(pos: Position): Option[Square] =
-    if isInsideBoard(pos)
-    then Some(squares(pos.row)(pos.col))
-    else None
+  
 
   private def updateInternalSquare(pos: Position, piece: Option[Piece]): Unit =
     squares = squares.updated(pos.row,
@@ -415,7 +399,7 @@ class CheckersBoard extends Board:
     val midRow = (from.position.row + to.position.row) / 2
     val midCol = (from.position.col + to.position.col) / 2
     val midPos = Position(midRow, midCol)
-    val midSquare = squareAt(midPos)
+    val midSquare = getSquare(midPos)
 
     midSquare match
       case Some(s) if s.piece.exists(_.color != movingPiece.color) && to.isEmpty => Some(s)
